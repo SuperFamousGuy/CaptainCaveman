@@ -60,6 +60,8 @@ Copilot: [returns a ready-to-paste Conventional Commit]
 
 ## Installation
 
+> **Run this from the root of your repository.** The installer writes to `.github/copilot-instructions.md` relative to the current working directory. If you run it from a subdirectory, a new `.github/` folder will be created there instead of in the one Copilot reads — and the install will be silently ineffective.
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SuperFamousGuy/CaptainCaveman/main/install.sh | bash
 ```
