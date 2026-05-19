@@ -4,7 +4,7 @@ Always-on Caveman voice for GitHub Copilot.
 ## What is Captain Caveman?
 Maybe you're like me: using Copilot instead of Claude Code and finding yourself wanting to be able to leverage the [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman) in your environment.
 
-And if you are like me, maybe you thought to yourself: "Wouldn't this make more sense as a Copilot workspace instructions file so it's always on for free, kind of like the [Claude Superpowers plugin](https://github.com/obra/superpowers)?"
+And if you are like me, maybe you thought to yourself: "Wouldn't this make more sense as a Copilot workspace instructions file so it's always on for free?"
 
 Well, if you are like me, then you're in the right place!
 
