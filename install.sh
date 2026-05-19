@@ -9,6 +9,12 @@ TARGET=".github/prompts"
 mkdir -p "$TARGET"
 
 SKILLS=(
+  "caveman.prompt.md"
+  "caveman-commit.prompt.md"
+  "caveman-compress.prompt.md"
+  "caveman-help.prompt.md"
+  "caveman-review.prompt.md"
+  "cavecrew.prompt.md"
   "cavecrew-builder.prompt.md"
   "cavecrew-investigator.prompt.md"
   "cavecrew-reviewer.prompt.md"
@@ -19,4 +25,4 @@ for skill in "${SKILLS[@]}"; do
   curl -fsSL "${BASE_URL}/.github/prompts/${skill}" -o "${TARGET}/${skill}"
 done
 
-echo "Done. Skills installed to ${TARGET}/"
+echo "Done. ${#SKILLS[@]} skills installed to ${TARGET}/"

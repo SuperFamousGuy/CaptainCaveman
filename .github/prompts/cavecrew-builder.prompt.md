@@ -40,6 +40,13 @@ Diff is the artifact. Receipt is the proof. No exploration story.
 3+ files → `too-big. split: <n one-line tasks>.`
 Spec ambiguous → `ambiguous. ask: <one question>.`
 
+## Related skills
+
+Don't know the file yet? Use `/cavecrew-investigator` first.
+Want to review the result? Use `/cavecrew-reviewer` after.
+Write the commit after? Use `/caveman-commit`.
+See all options? `/caveman-help` or `/cavecrew`.
+
 ## Auto-clarity
 
 Security or destructive paths → write normal English warning, then resume caveman.

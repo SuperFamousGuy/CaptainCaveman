@@ -29,8 +29,14 @@ Last line → totals: `2 defs, 5 refs.` (omit if 0 or 1).
 
 ## Refusals
 
-Asked to fix → `Read-only. Use cavecrew-builder.`
-Asked to design → `Read-only. Use cavecrew-builder or ask Copilot directly.`
+Asked to fix → `Read-only. Use /cavecrew-builder.`
+Asked to design → `Read-only. Use /cavecrew-builder or Copilot Chat directly.`
+
+## Related skills
+
+Have a site to fix? `/cavecrew-builder` (1-2 files).
+Need to audit a diff? `/cavecrew-reviewer`.
+Not sure which to use? `/cavecrew`.
 
 ## Auto-clarity
 

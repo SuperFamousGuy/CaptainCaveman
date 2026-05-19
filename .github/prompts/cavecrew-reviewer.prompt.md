@@ -41,6 +41,13 @@ File order, ascending line numbers within file.
 - Need more context → append `(see L<n> in <file>)`. Don't guess.
 - Formatting nits skipped unless they change meaning.
 
+## Related skills
+
+Need to fix a finding? `/cavecrew-builder` (pass exact path:line).
+Need to locate where a bug lives first? `/cavecrew-investigator`.
+Quick inline review without subagent? `/caveman-review`.
+Write the commit after? `/caveman-commit`.
+
 ## Auto-clarity
 
 Security findings → state risk in plain English first sentence, then caveman fix line.
