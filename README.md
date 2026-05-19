@@ -8,66 +8,69 @@ And if you are like me, maybe you thought to yourself: "Don't these make more se
 
 Well, if you are like me, then you're in the right place!
 
-This repo contains Skills that produce similar functionality and results as the Caveman plugin which you can drop right into your `.github` dir and get started saving on your tokens for free!
+This repo contains Skills that produce similar functionality and results as the Caveman plugin, packaged as a Copilot workspace instructions file. Drop it into your repo's `.github/` directory and Copilot will auto-activate the right skill based on what you ask — no slash commands required.
+
+## How it works
+
+The skills live in a single file: `.github/copilot-instructions.md`. GitHub Copilot auto-loads this on every chat in the workspace. Each skill section inside has a **Trigger** clause telling Copilot when to apply that behavior based on your intent.
+
+Ask "write a commit" → caveman-commit fires. Ask "review this diff" → caveman-review fires. Say "caveman mode" → terse responses turn on for the session. No slash commands, no manual selection.
 
 ## Skills
 
 ### Communication mode
 
-| Skill | Trigger | What it does |
+| Skill | Triggered by | What it does |
 |---|---|---|
-| **caveman** | `/caveman` | Activates terse caveman communication mode. Levels: `lite`, `full` (default), `ultra`. ~75% token reduction. |
-| **caveman-help** | `/caveman-help` | Quick-reference card for all skills and triggers. |
+| **caveman** | "caveman mode", "be brief", "less tokens" | Activates terse responses. Levels: lite, full (default), ultra. |
+
+Stays active until you say "stop caveman" or "normal mode".
 
 ### Standalone task skills
 
-| Skill | Trigger | What it does |
+| Skill | Triggered by | What it does |
 |---|---|---|
-| **caveman-commit** | `/caveman-commit` | Generates terse Conventional Commits messages. Subject ≤50 chars, body only when needed. |
-| **caveman-review** | `/caveman-review` | One-line code review findings. `file:L42: 🔴 bug: problem. fix.` |
-| **caveman-compress** | `/caveman-compress <file>` | Compresses `.md` files to caveman prose. ~46% input token reduction. |
+| **caveman-commit** | Asking to write/generate a commit message | Conventional Commits format, ≤50 char subject |
+| **caveman-review** | "review this PR", "review the diff", "audit this file" | One-line severity-tagged findings: `🔴 bug` / `🟡 risk` / `🔵 nit` / `❓ q` |
+| **caveman-compress** | "compress this file" with a `.md` target | Reduces markdown prose ~46% while preserving code/structure |
+| **caveman-help** | "what caveman skills are there", "show me what's available" | Quick reference card |
 
-### Cavecrew delegation skills
+### Cavecrew skills (focused, token-efficient sub-tasks)
 
-Use these for focused, token-efficient sub-tasks. All output is caveman-compressed.
-
-| Skill | Trigger | What it does |
+| Skill | Triggered by | What it does |
 |---|---|---|
-| **cavecrew** | `/cavecrew` | Routing guide — which cavecrew skill to use for which task. |
-| **cavecrew-investigator** | `/cavecrew-investigator` | Read-only code locator. Returns `file:line` table for symbols/usages. Never edits. |
-| **cavecrew-builder** | `/cavecrew-builder` | Surgical 1-2 file editor. Returns diff receipt. Hard refuses 3+ file scope. |
-| **cavecrew-reviewer** | `/cavecrew-reviewer` | Severity-tagged diff review. 🔴 bug / 🟡 risk / 🔵 nit / ❓ question format. |
+| **cavecrew-investigator** | "where is X defined", "what calls Y", "list uses of Z" | Read-only locator. Returns `file:line` table. Never edits. |
+| **cavecrew-builder** | Surgical edit requests with obvious 1-2 file scope | Returns diff receipt. Hard refuses 3+ file scope. |
+| **cavecrew-reviewer** | Focused diff review in a chained workflow | Same emoji format as caveman-review, bounded-scope contract |
+| **cavecrew** | "which skill should I use", "how do I use this" | Routing guide |
 
 > **Note:** `caveman-stats` from the original Caveman plugin relies on Claude Code session hooks and has no Copilot equivalent.
 
 ## Typical workflow
 
-```
-/cavecrew-investigator  → find where the bug is (file:line table)
-/cavecrew-builder       → fix it (1-2 files, returns diff receipt)
-/cavecrew-reviewer      → audit the diff (severity-tagged findings)
-/caveman-commit         → generate the commit message
-```
+Just describe what you want — Copilot picks the right skill:
 
-Or for quick tasks:
 ```
-/caveman-review         → review current diff inline
-/caveman-commit         → write the commit message
+You: "Where's the validateToken function defined?"
+→ cavecrew-investigator fires, returns file:line table
+
+You: "Fix the off-by-one in auth.ts:L42"
+→ cavecrew-builder fires, returns diff receipt
+
+You: "Review my current diff"
+→ caveman-review fires, returns severity-tagged findings
+
+You: "Write the commit message"
+→ caveman-commit fires, returns ready-to-paste Conventional Commit
 ```
 
 ## Installation
-
-Copy the `.github/prompts/` directory into your repository:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SuperFamousGuy/CaptainCaveman/main/install.sh | bash
 ```
 
-Or manually copy the files you want from `.github/prompts/`.
-
-## Usage
-
-In GitHub Copilot Chat, type `/` and search for `caveman` or `cavecrew` to see all available skills.
+Or manually copy `.github/copilot-instructions.md` into your repo's `.github/` directory.
 
 ## Credits
 

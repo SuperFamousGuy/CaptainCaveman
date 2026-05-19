@@ -4,25 +4,12 @@ set -e
 REPO="SuperFamousGuy/CaptainCaveman"
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
-TARGET=".github/prompts"
+TARGET=".github"
 
 mkdir -p "$TARGET"
 
-SKILLS=(
-  "caveman.prompt.md"
-  "caveman-commit.prompt.md"
-  "caveman-compress.prompt.md"
-  "caveman-help.prompt.md"
-  "caveman-review.prompt.md"
-  "cavecrew.prompt.md"
-  "cavecrew-builder.prompt.md"
-  "cavecrew-investigator.prompt.md"
-  "cavecrew-reviewer.prompt.md"
-)
+echo "Installing CaptainCaveman skills..."
+curl -fsSL "${BASE_URL}/.github/copilot-instructions.md" -o "${TARGET}/copilot-instructions.md"
 
-for skill in "${SKILLS[@]}"; do
-  echo "Installing $skill..."
-  curl -fsSL "${BASE_URL}/.github/prompts/${skill}" -o "${TARGET}/${skill}"
-done
-
-echo "Done. ${#SKILLS[@]} skills installed to ${TARGET}/"
+echo "Done. Skills installed to ${TARGET}/copilot-instructions.md"
+echo "Open Copilot Chat in this workspace — skills auto-activate based on intent."
