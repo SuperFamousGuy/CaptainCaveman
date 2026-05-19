@@ -8,23 +8,22 @@ And if you are like me, maybe you thought to yourself: "Don't these make more se
 
 Well, if you are like me, then you're in the right place!
 
-This repo contains Skills that produce similar functionality and results as the Caveman plugin, packaged as a Copilot workspace instructions file. Drop it into your repo's `.github/` directory and Copilot will auto-activate the right skill based on what you ask — no slash commands required.
+This repo contains Skills that produce similar functionality and results as the Caveman plugin, packaged as a Copilot workspace instructions file. Drop it into your repo's `.github/` directory and **caveman voice turns on permanently** for that workspace. Task skills (commit messages, reviews, etc.) auto-activate based on what you ask — no slash commands, no toggles.
+
+> Want a toggleable caveman with intensity levels? Use the original [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman). This repo is the always-on alternative — drop the file in, get caveman; remove it, get normal Copilot.
 
 ## How it works
 
-The skills live in a single file: `.github/copilot-instructions.md`. GitHub Copilot auto-loads this on every chat in the workspace. Each skill section inside has a **Trigger** clause telling Copilot when to apply that behavior based on your intent.
+The skills live in a single file: `.github/copilot-instructions.md`. GitHub Copilot auto-loads this on every chat in the workspace.
 
-Ask "write a commit" → caveman-commit fires. Ask "review this diff" → caveman-review fires. Say "caveman mode" → terse responses turn on for the session. No slash commands, no manual selection.
+- **Caveman voice is always on.** Every response is terse, no fluff, technical substance preserved. No way to toggle from inside chat.
+- **Task skills layer on top.** Ask "write a commit" → caveman-commit format applies. Ask "review this diff" → caveman-review format applies. These trigger based on user intent.
 
 ## Skills
 
-### Communication mode
+### Always-on: caveman voice
 
-| Skill | Triggered by | What it does |
-|---|---|---|
-| **caveman** | "caveman mode", "be brief", "less tokens" | Activates terse responses. Levels: lite, full (default), ultra. |
-
-Stays active until you say "stop caveman" or "normal mode".
+Drop articles, filler, hedging, pleasantries. Fragments OK. Technical terms exact. Code unchanged. Applied to every response in the workspace.
 
 ### Standalone task skills
 
