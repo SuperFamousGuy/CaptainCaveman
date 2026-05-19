@@ -64,9 +64,16 @@ Copilot: [returns a ready-to-paste Conventional Commit]
 curl -fsSL https://raw.githubusercontent.com/SuperFamousGuy/CaptainCaveman/main/install.sh | bash
 ```
 
-Or manually copy `.github/copilot-instructions.md` into your repo's `.github/` directory.
+The installer is **additive and non-destructive** — it never overwrites your existing instructions:
 
-To turn Caveman off: delete the file.
+- **No existing file?** Creates `.github/copilot-instructions.md` with the CaptainCaveman block wrapped in marker comments.
+- **Existing file without CaptainCaveman?** Appends the marker-wrapped block to the end. Your existing content stays untouched at the top.
+- **Existing file with CaptainCaveman already installed?** Updates the content between the markers in place. Anything outside the markers is preserved. Re-running is idempotent.
+- **Broken state (only one marker)?** Refuses to modify the file and exits with an error so you can fix it manually.
+
+You can also just copy `.github/copilot-instructions.md` from this repo into your repo's `.github/` directory yourself.
+
+To uninstall: delete the file (if CaptainCaveman is the only thing in it), or remove everything between the `<!-- BEGIN CAPTAINCAVEMAN -->` and `<!-- END CAPTAINCAVEMAN -->` markers.
 
 ## Credits
 
