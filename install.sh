@@ -65,40 +65,66 @@ else
   fi
 fi
 
-# --- Part 2: Install agent skills under .github/skills/ ---
+# --- Part 2: Install agent skills under .github/skills/ (best-effort) ---
+# Part 2 must never break Part 1. If anything goes wrong (no python3, API
+# rate-limit, network blip, partial download), warn and exit 0 — the
+# instructions file is already in place.
 echo
 echo "Fetching skill list..."
-TREE_JSON=$(curl -fsSL "${API_URL}/git/trees/${BRANCH}?recursive=1")
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "Warning: python3 not found. Skipping skill install. Instructions file is still in place." >&2
+  echo "Note: python3 not found. Skipping agent-skill install (instructions file already in place)." >&2
+  exit 0
+fi
+
+set +e
+TREE_JSON=$(curl -fsSL "${API_URL}/git/trees/${BRANCH}?recursive=1")
+TREE_RC=$?
+set -e
+if [ "$TREE_RC" -ne 0 ] || [ -z "$TREE_JSON" ]; then
+  echo "Warning: failed to list repo tree via GitHub API (rate-limit or network). Skipping agent-skill install." >&2
   exit 0
 fi
 
 PATHS=$(printf '%s' "$TREE_JSON" | python3 -c "
 import sys, json
-tree = json.load(sys.stdin)
+try:
+    tree = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
 for item in tree.get('tree', []):
-    if item['type'] == 'blob' and item['path'].startswith('$SKILLS_PREFIX'):
+    if item.get('type') == 'blob' and item.get('path', '').startswith('$SKILLS_PREFIX'):
         print(item['path'])
-")
+" 2>/dev/null) || {
+  echo "Warning: could not parse the GitHub API tree response. Skipping agent-skill install." >&2
+  exit 0
+}
 
 if [ -z "$PATHS" ]; then
   echo "No agent skills found in the repo. Done."
   exit 0
 fi
 
-SKILL_COUNT=$(printf '%s\n' "$PATHS" | awk -F/ '{print $3}' | sort -u | wc -l | tr -d ' ')
+SKILL_COUNT=$(printf '%s\n' "$PATHS" | awk -F/ 'NF>=3{print $3}' | sort -u | wc -l | tr -d ' ')
 FILE_COUNT=$(printf '%s\n' "$PATHS" | wc -l | tr -d ' ')
 echo "Installing $SKILL_COUNT agent skills ($FILE_COUNT files)..."
 
+FAILED=0
 while IFS= read -r path; do
   [ -z "$path" ] && continue
   mkdir -p "$(dirname "$path")"
-  curl -fsSL "${BASE_URL}/${path}" -o "$path"
+  if ! curl -fsSL "${BASE_URL}/${path}" -o "$path"; then
+    echo "  Warning: failed to download $path" >&2
+    FAILED=$((FAILED + 1))
+  fi
 done <<EOF
 $PATHS
 EOF
 
-echo "Done."
+if [ "$FAILED" -gt 0 ]; then
+  echo "Skill install completed with $FAILED file(s) failed. Re-run the installer to retry." >&2
+else
+  echo "Skill install complete."
+fi
+
 echo "Open Copilot Chat in this workspace — Caveman is now active and agent skills are available."
