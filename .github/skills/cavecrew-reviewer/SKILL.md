@@ -30,9 +30,11 @@ Zero findings → `No issues.`
 
 ## When to use this vs caveman-review
 
-Both produce the same output. Pick `cavecrew-reviewer` when:
+Both share the **per-finding line format** (`<file>:L<line>: <emoji> <severity>: <problem>. <fix>.`) and severity tags. They differ on the closing conventions: `cavecrew-reviewer` requires a `totals:` line and uses `No issues.` for zero findings; `caveman-review` uses `LGTM.` for zero findings and treats totals as optional.
+
+Pick `cavecrew-reviewer` when:
 - You're in a chained `investigator → builder → reviewer` flow
-- You want explicit bounded-scope, output-only behavior
+- You want explicit bounded-scope, output-only behavior with a totals receipt
 - You're treating the review as a delegated subagent
 
-Pick `caveman-review` for standalone "review my diff" requests.
+Pick `caveman-review` for standalone "review my diff" requests where a totals line and `LGTM.`-style sign-off feel more natural.
