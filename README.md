@@ -110,13 +110,22 @@ curl -fsSL https://raw.githubusercontent.com/SuperFamousGuy/CaptainCaveman/main/
 
 The installer does two things:
 
+### Step 0 — Legacy cleanup
+
+Removes leftover files from the earliest (PR #2) installer iteration that used slash-invoked prompt files:
+
+- Deletes any `.github/prompts/{caveman,cavecrew}-*.prompt.md` files from that era.
+- If `.github/prompts/` is then empty, removes the directory.
+- No-op when those files aren't present.
+
 ### Part 1 — `.github/copilot-instructions.md` (additive, non-destructive)
 
-Never overwrites your existing instructions. Manages a marker-delimited CaptainCaveman block inside the file:
+Never overwrites your *user-authored* instructions. Manages a marker-delimited CaptainCaveman block inside the file. Cases:
 
 - **No existing file?** Creates it with the CaptainCaveman block wrapped in marker comments.
-- **Existing file without CaptainCaveman?** Appends the marker-wrapped block to the end. Your existing content stays untouched at the top.
-- **Existing file with CaptainCaveman already installed?** Updates the content between the markers in place. Anything outside the markers is preserved. Re-running is idempotent.
+- **Pre-marker, fully-managed legacy file?** Detected when the file's first non-blank line starts with `# CaptainCaveman` (the H1 used by the original installer before markers existed). The whole file is replaced with the current marker-wrapped Superpowered block.
+- **Existing file without CaptainCaveman content?** Appends the marker-wrapped block to the end. Your existing content stays untouched at the top.
+- **Existing file with CaptainCaveman already installed (markers present)?** Updates the content between the markers in place. Anything outside the markers is preserved. Re-running is idempotent.
 - **Broken state (only one marker)?** Refuses to modify the file and exits with a clear error.
 
 ### Part 2 — `.github/skills/<name>/SKILL.md` (best-effort)

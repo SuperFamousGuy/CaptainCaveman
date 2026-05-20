@@ -10,27 +10,85 @@ SKILLS_PREFIX=".github/skills/"
 BEGIN_MARKER="<!-- BEGIN CAPTAINCAVEMAN -->"
 END_MARKER="<!-- END CAPTAINCAVEMAN -->"
 
+# All `.prompt.md` files the very first (PR #2) installer dropped under
+# `.github/prompts/`. Later iterations replaced this with copilot-instructions.md
+# + .github/skills/, but old files linger on workspaces that installed during
+# that brief window.
+LEGACY_PROMPT_FILES=(
+  ".github/prompts/caveman.prompt.md"
+  ".github/prompts/caveman-commit.prompt.md"
+  ".github/prompts/caveman-compress.prompt.md"
+  ".github/prompts/caveman-help.prompt.md"
+  ".github/prompts/caveman-review.prompt.md"
+  ".github/prompts/cavecrew.prompt.md"
+  ".github/prompts/cavecrew-builder.prompt.md"
+  ".github/prompts/cavecrew-investigator.prompt.md"
+  ".github/prompts/cavecrew-reviewer.prompt.md"
+)
+
 mkdir -p "$(dirname "$TARGET")"
 
 TMP=$(mktemp)
 trap 'rm -f "$TMP" "$TARGET.new" 2>/dev/null || true' EXIT
 
+# --- Step 0: Clean up legacy CaptainCaveman artifacts ---
+# Removes `.github/prompts/*.prompt.md` files from the original (PR #2) install,
+# and (later) rewrites any pre-marker monolithic copilot-instructions.md as part
+# of Part 1.
+REMOVED_LEGACY=0
+for f in "${LEGACY_PROMPT_FILES[@]}"; do
+  if [ -f "$f" ]; then
+    rm -f "$f"
+    echo "Removed legacy file: $f"
+    REMOVED_LEGACY=$((REMOVED_LEGACY + 1))
+  fi
+done
+if [ "$REMOVED_LEGACY" -gt 0 ] && [ -d .github/prompts ] && [ -z "$(ls -A .github/prompts 2>/dev/null)" ]; then
+  rmdir .github/prompts
+  echo "Removed now-empty .github/prompts/ directory"
+fi
+if [ "$REMOVED_LEGACY" -gt 0 ]; then
+  echo "Cleaned up $REMOVED_LEGACY legacy file(s) from an earlier CaptainCaveman install."
+  echo
+fi
+
+# Detect a pre-marker monolithic CaptainCaveman install (file exists, no
+# markers, but H1 is CaptainCaveman). Earlier installer versions used a plain
+# `curl -o` and didn't add markers — re-running today would append a duplicate
+# block. Treat these as fully-managed legacy files and wipe-and-replace.
+is_legacy_monolithic_install() {
+  [ -f "$TARGET" ] || return 1
+  # First non-blank line must be the CaptainCaveman H1
+  local first_line
+  first_line=$(awk 'NF{print; exit}' "$TARGET")
+  case "$first_line" in
+    "# CaptainCaveman"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # --- Part 1: Install/update copilot-instructions.md ---
 echo "Fetching CaptainCaveman instructions..."
 curl -fsSL "${BASE_URL}/.github/copilot-instructions.md" -o "$TMP"
 
-if [ ! -f "$TARGET" ]; then
+write_fresh_block() {
   {
     printf '%s\n' "$BEGIN_MARKER"
     cat "$TMP"
     printf '%s\n' "$END_MARKER"
   } > "$TARGET"
+}
+
+if [ ! -f "$TARGET" ]; then
+  # Fresh install
+  write_fresh_block
   echo "Installed instructions to $TARGET"
 else
   HAS_BEGIN=$(grep -cF "$BEGIN_MARKER" "$TARGET" || true)
   HAS_END=$(grep -cF "$END_MARKER" "$TARGET" || true)
 
   if [ "$HAS_BEGIN" -eq 1 ] && [ "$HAS_END" -eq 1 ]; then
+    # Standard managed-block update
     awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" -v content_file="$TMP" '
       $0 == begin {
         print
@@ -48,15 +106,25 @@ else
     mv "$TARGET.new" "$TARGET"
     echo "Updated CaptainCaveman block in $TARGET (other content preserved)."
   elif [ "$HAS_BEGIN" -eq 0 ] && [ "$HAS_END" -eq 0 ]; then
-    {
-      cat "$TARGET"
-      tail -c1 "$TARGET" | od -An -c | grep -q '\\n' || printf '\n'
-      printf '\n%s\n' "$BEGIN_MARKER"
-      cat "$TMP"
-      printf '%s\n' "$END_MARKER"
-    } > "$TARGET.new"
-    mv "$TARGET.new" "$TARGET"
-    echo "Appended CaptainCaveman block to existing $TARGET (existing content preserved)."
+    if is_legacy_monolithic_install; then
+      # Pre-marker (PR #3 / PR #5 era) CaptainCaveman install — fully-managed
+      # file with no markers. Wipe and replace with the current marker-wrapped
+      # block so users get the dispatcher + skill references.
+      write_fresh_block
+      echo "Detected legacy pre-marker CaptainCaveman install in $TARGET — replaced with the current Superpowered version."
+    else
+      # Genuine user-authored file with no CaptainCaveman content yet. Append
+      # the block after preserving everything that's already there.
+      {
+        cat "$TARGET"
+        tail -c1 "$TARGET" | od -An -c | grep -q '\\n' || printf '\n'
+        printf '\n%s\n' "$BEGIN_MARKER"
+        cat "$TMP"
+        printf '%s\n' "$END_MARKER"
+      } > "$TARGET.new"
+      mv "$TARGET.new" "$TARGET"
+      echo "Appended CaptainCaveman block to existing $TARGET (existing content preserved)."
+    fi
   else
     echo "Error: $TARGET has an unbalanced CaptainCaveman marker pair." >&2
     echo "  BEGIN markers: $HAS_BEGIN, END markers: $HAS_END" >&2
