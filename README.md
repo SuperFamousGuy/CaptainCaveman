@@ -1,16 +1,30 @@
 # CaptainCaveman
 Always-on Caveman voice for GitHub Copilot.
 
-## What is Captain Caveman?
-Maybe you're like me: using Copilot instead of Claude Code and finding yourself wanting to be able to leverage the [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman) in your environment.
+## What is CaptainCaveman?
 
-And if you are like me, maybe you thought to yourself: "Wouldn't this make more sense as a Copilot workspace instructions file so it's always on for free?"
+CaptainCaveman = drop-in workspace bundle for GitHub Copilot. Ports two Claude Code plugins into Copilot-native form:
 
-Well, if you are like me, then you're in the right place!
+- **Caveman** (terse-output mode) — from [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)
+- **Superpowers** (engineering-workflow skills) — from [obra/superpowers](https://github.com/obra/superpowers)
 
-This repo packages Caveman as a single GitHub Copilot workspace instructions file. Drop it into your repo's `.github/` directory and **every Copilot response in that workspace becomes terse Caveman voice**. Task-specific formats (commit messages, code reviews, etc.) layer on top automatically when you ask for them — no slash commands, no toggles, no manual selection.
+Two artifacts:
 
-> Want a toggleable Caveman with intensity levels? Use the original [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman). This repo is the always-on alternative — drop the file in, get Caveman; remove the file, get normal Copilot.
+| Path | Role |
+|---|---|
+| `.github/copilot-instructions.md` | Always-on caveman voice + dispatcher table mapping user intent → skill name |
+| `.github/skills/<name>/SKILL.md` × 21 | Skill bodies as Copilot agent skills |
+
+Net effect: drop files into `.github/`, Copilot becomes terse on every response and gains 21 task behaviors — commit messages, code review, symbol locator, surgical edits, systematic debugging, TDD, plan writing, parallel-task dispatch, worktree workflow, and more. Skills auto-fire on intent. No slash commands, no toggles, no prompting. Remove files → normal Copilot.
+
+Two routes to skill invocation, same source of truth:
+
+- **Native agent-skill auto-load** — Copilot cloud agent, Copilot CLI, VS Code agent mode read SKILL.md `description` fields directly
+- **Dispatcher table in `copilot-instructions.md`** — covers every other Copilot client (regular Chat, JetBrains, inline, completions) by giving Copilot explicit "if user about to X, invoke skill Y" routing
+
+The pitch in one line: **your coding agent just has Caveman and Superpowers.**
+
+> Want a toggleable Caveman with intensity levels instead of always-on? Use the original [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman).
 
 ## How it works
 
