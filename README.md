@@ -1,39 +1,46 @@
 # CaptainCaveman
-Always-on Caveman voice for GitHub Copilot.
+Always-on Caveman voice + Superpowers engineering skills for GitHub Copilot.
 
-## What is Captain Caveman?
-Maybe you're like me: using Copilot instead of Claude Code and finding yourself wanting to be able to leverage the [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman) in your environment.
+## What is CaptainCaveman?
 
-And if you are like me, maybe you thought to yourself: "Wouldn't this make more sense as a Copilot workspace instructions file so it's always on for free?"
+CaptainCaveman = drop-in workspace bundle for GitHub Copilot. Ports two Claude Code plugins into Copilot-native form:
 
-Well, if you are like me, then you're in the right place!
+- **Caveman** (terse-output mode) — from [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)
+- **Superpowers** (engineering-workflow skills) — from [obra/superpowers](https://github.com/obra/superpowers)
 
-This repo packages Caveman as a single GitHub Copilot workspace instructions file. Drop it into your repo's `.github/` directory and **every Copilot response in that workspace becomes terse Caveman voice**. Task-specific formats (commit messages, code reviews, etc.) layer on top automatically when you ask for them — no slash commands, no toggles, no manual selection.
+Two artifacts:
 
-> Want a toggleable Caveman with intensity levels? Use the original [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman). This repo is the always-on alternative — drop the file in, get Caveman; remove the file, get normal Copilot.
+| Path | Role |
+|---|---|
+| `.github/copilot-instructions.md` | Always-on caveman voice + dispatcher table mapping user intent → skill name |
+| `.github/skills/<name>/SKILL.md` × 21 | Skill bodies as Copilot agent skills |
+
+Net effect: drop files into `.github/`, Copilot becomes terse on every response and gains 21 task behaviors — commit messages, code review, symbol locator, surgical edits, systematic debugging, TDD, plan writing, parallel-task dispatch, worktree workflow, and more. Skills auto-fire on intent. No slash commands, no toggles, no prompting. Remove files → normal Copilot.
+
+The pitch in one line: **your coding agent just has Caveman and Superpowers.**
+
+> Want a toggleable Caveman with intensity levels instead of always-on? Use the original [Caveman plugin for Claude Code](https://github.com/JuliusBrussee/caveman).
 
 ## How it works
 
-CaptainCaveman uses two complementary Copilot mechanisms, wired together so the skills fire **everywhere** without slash commands or manual invocation:
+Two routes to skill invocation, same SKILL.md bodies as source of truth:
 
-1. **`.github/copilot-instructions.md`** — auto-loaded by every Copilot client on every chat. Holds the **always-on caveman voice** plus an **automatic skill-invocation dispatcher** table that tells Copilot which skill to load for which kind of task.
-2. **`.github/skills/<name>/SKILL.md`** — Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). Each skill has a `description` field that tells Copilot when to load it. Bounded task behaviors (commit messages, terse reviews, surgical edits, symbol locators, debugging, TDD, etc.) live here as the **single source of truth** for their content.
+- **Native agent-skill auto-load** — Copilot cloud agent, the Copilot CLI, and VS Code agent mode read `.github/skills/<name>/SKILL.md` directly and load skills whose `description` matches the task.
+- **Dispatcher table in `copilot-instructions.md`** — covers every other Copilot client (regular Chat, JetBrains, inline, github.com chat, completions). Copilot reads the dispatcher on every chat and follows the "if user about to do X, invoke skill Y" routing.
 
-### Why the dispatcher exists
+The always-on caveman voice also lives in `copilot-instructions.md` and applies to every response in every Copilot client.
 
-Copilot's native agent-skill auto-loading only fires in **cloud agent, Copilot CLI, and VS Code agent mode**. In regular Copilot Chat / inline chat / github.com chat / JetBrains / completions, Copilot doesn't automatically scan `.github/skills/*/SKILL.md`. The dispatcher table in `copilot-instructions.md` closes that gap — Copilot reads it on every chat in any context and follows the "if user about to do X, invoke skill Y" routing.
+The `using-captaincaveman` meta-skill enforces the aggressive-invocation philosophy from upstream Superpowers — *"if there is even a 1% chance a skill might apply, you MUST invoke it."*
 
-**Net result:** drop these files into your `.github/` and the skills fire automatically in every Copilot client. No prompts, no slash commands, no toggles.
+## Skills
 
-## Caveman skills
+### Always on (from `copilot-instructions.md`)
 
-### Always on (in `copilot-instructions.md`)
+Caveman voice on every response. Drop articles, filler, pleasantries, hedging. Fragments OK. Code blocks untouched. Technical terms exact. Auto-clarity exception for security warnings, destructive ops, and any place where compression risks misreading.
 
-Caveman voice on every response. Drop articles, filler, pleasantries, hedging. Fragments OK. Code blocks untouched. Technical terms exact.
+### Caveman / cavecrew skills (8)
 
-### Agent skills (in `.github/skills/`)
-
-These trigger automatically when their `description` matches your request. No invocation needed.
+Ported from [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman). Bounded, format-specific outputs.
 
 | Skill | Use when you... |
 |---|---|
@@ -48,21 +55,17 @@ These trigger automatically when their `description` matches your request. No in
 
 > **Not ported:** `caveman-stats` from the original plugin relies on Claude Code session hooks and has no Copilot equivalent.
 
-## Superpowers skills (from `obra/superpowers`)
+### Superpowers skills (13)
 
-Additional skills ported from [obra/superpowers](https://github.com/obra/superpowers) ship under `.github/skills/`. **Same architecture as the Caveman/cavecrew skills above:** the dispatcher in `copilot-instructions.md` routes intent to the relevant skill, so they fire universally across every Copilot client — not just in cloud agent, Copilot CLI, and VS Code agent mode (where Copilot's native agent-skill auto-loading would also fire them).
-
-The `using-captaincaveman` meta-skill enforces the aggressive-invocation philosophy from upstream — "if there is even a 1% chance a skill might apply, you MUST invoke it."
-
-### Skill catalog
+Ported from [obra/superpowers](https://github.com/obra/superpowers). Engineering-workflow discipline.
 
 | Skill | Use when you... |
 |---|---|
 | `using-captaincaveman` | Always — meta-skill that enforces aggressive skill invocation |
-| `brainstorming` | ...start any creative work — features, components, behavior changes — to explore intent before implementation |
+| `brainstorming` | ...start any creative work, to explore intent before implementation |
 | `dispatching-parallel-agents` | ...face 2+ independent tasks that don't share state or dependencies |
 | `executing-plans` | ...have a written plan to execute with review checkpoints |
-| `finishing-a-development-branch` | ...have implementation complete, tests passing, ready to merge/PR/clean up |
+| `finishing-a-development-branch` | ...have implementation complete and tests passing, ready to merge/PR |
 | `receiving-code-review` | ...work through review feedback with rigor instead of performative agreement |
 | `requesting-code-review` | ...are about to merge and want the work verified against requirements |
 | `systematic-debugging` | ...hit any bug, test failure, or unexpected behavior, before proposing fixes |
@@ -74,45 +77,65 @@ The `using-captaincaveman` meta-skill enforces the aggressive-invocation philoso
 
 > **Not ported from Superpowers:** `subagent-driven-development` relies on Claude Code's `Task` tool throughout and doesn't translate cleanly. Use it with [obra/superpowers](https://github.com/obra/superpowers) directly if you need that workflow.
 
-Skill content is preserved verbatim from upstream (MIT-licensed, © 2025 Jesse Vincent). See `LICENSE-superpowers` for the original license.
+Skill content preserved verbatim from upstream (MIT, © 2025 Jesse Vincent). See `LICENSE-superpowers` for the original license text.
 
 ## Typical workflow
 
-Just describe what you want. The right format applies automatically:
+Just describe what you want — the right format applies automatically:
 
 ```
 You: "Where's the validateToken function defined?"
-Copilot: [returns file:line table, no prose]
+Copilot: [cavecrew-investigator returns a file:line table, no prose]
 
 You: "Fix the off-by-one in auth.ts:L42"
-Copilot: [edits the file, returns a diff receipt]
+Copilot: [test-driven-development engages, cavecrew-builder edits the file, returns receipt]
 
 You: "Review my current diff"
-Copilot: [returns one-line severity-tagged findings]
+Copilot: [caveman-review returns one-line severity-tagged findings]
+
+You: "Is this ready to merge?"
+Copilot: [verification-before-completion + finishing-a-development-branch run their checks]
 
 You: "Write the commit message"
-Copilot: [returns a ready-to-paste Conventional Commit]
+Copilot: [caveman-commit returns a ready-to-paste Conventional Commit]
 ```
 
 ## Installation
 
-> **Run this from the root of your repository.** The installer writes to `.github/copilot-instructions.md` relative to the current working directory. If you run it from a subdirectory, a new `.github/` folder will be created there instead of in the one Copilot reads — and the install will be silently ineffective.
+> **Run this from the root of your repository.** The installer writes paths relative to the current working directory. If you run it from a subdirectory, a stray `.github/` folder will be created there instead of in the one Copilot reads — and the install will be silently ineffective.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SuperFamousGuy/CaptainCaveman/main/install.sh | bash
 ```
 
-The installer is **additive and non-destructive** — it never overwrites your existing instructions:
+The installer does two things:
 
-- **No existing file?** Creates `.github/copilot-instructions.md` with the CaptainCaveman block wrapped in marker comments.
+### Part 1 — `.github/copilot-instructions.md` (additive, non-destructive)
+
+Never overwrites your existing instructions. Manages a marker-delimited CaptainCaveman block inside the file:
+
+- **No existing file?** Creates it with the CaptainCaveman block wrapped in marker comments.
 - **Existing file without CaptainCaveman?** Appends the marker-wrapped block to the end. Your existing content stays untouched at the top.
 - **Existing file with CaptainCaveman already installed?** Updates the content between the markers in place. Anything outside the markers is preserved. Re-running is idempotent.
-- **Broken state (only one marker)?** Refuses to modify the file and exits with an error so you can fix it manually.
+- **Broken state (only one marker)?** Refuses to modify the file and exits with a clear error.
 
-You can also just copy `.github/copilot-instructions.md` from this repo into your repo's `.github/` directory yourself.
+### Part 2 — `.github/skills/<name>/SKILL.md` (best-effort)
 
-To uninstall: delete the file (if CaptainCaveman is the only thing in it), or remove everything between the `<!-- BEGIN CAPTAINCAVEMAN -->` and `<!-- END CAPTAINCAVEMAN -->` markers.
+Enumerates skill files via the GitHub git-trees API and downloads each one. Requires `python3` for JSON parsing.
+
+- If `python3` is missing, Part 2 is skipped with a warning. Part 1 still completes — you get the always-on voice and the dispatcher; agent-skill auto-load in agent contexts won't have local files to read, but the dispatcher still works.
+- If the GitHub API is rate-limited or unreachable, Part 2 warns and skips. Part 1 still completes.
+- Per-file download failures are reported but don't abort the install — re-run to retry.
+
+### Manual install
+
+Copy `.github/copilot-instructions.md` and the `.github/skills/` tree from this repo into your repo's `.github/` directory yourself.
+
+## Uninstall
+
+Delete the file (if CaptainCaveman is the only thing in `copilot-instructions.md`), or remove everything between the `<!-- BEGIN CAPTAINCAVEMAN -->` and `<!-- END CAPTAINCAVEMAN -->` markers. Optionally remove the `.github/skills/` tree.
 
 ## Credits
 
-Based on the [Caveman](https://github.com/JuliusBrussee/caveman) plugin for Claude Code by [@JuliusBrussee](https://github.com/JuliusBrussee).
+- [Caveman](https://github.com/JuliusBrussee/caveman) plugin for Claude Code by [@JuliusBrussee](https://github.com/JuliusBrussee) — source of caveman voice and the caveman/cavecrew task skills.
+- [Superpowers](https://github.com/obra/superpowers) plugin for Claude Code by [@obra](https://github.com/obra) (Jesse Vincent) — source of the 13 engineering-workflow skills. Content preserved verbatim under the upstream MIT license (`LICENSE-superpowers`).
