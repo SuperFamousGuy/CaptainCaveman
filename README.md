@@ -130,15 +130,25 @@ Never overwrites your *user-authored* instructions. Manages a marker-delimited C
 
 ### Part 2 — `.github/skills/<name>/SKILL.md` (best-effort)
 
-Enumerates skill files via the GitHub git-trees API and downloads each one. Requires `python3` for JSON parsing.
+Enumerates skill files via the GitHub git-trees API and downloads each one, including supporting files like `brainstorming/scripts/*` (visual-companion server + helpers), `systematic-debugging/find-polluter.sh`, and the worked examples under `writing-skills/examples/`. Requires `python3` for JSON parsing.
 
 - If `python3` is missing, Part 2 is skipped with a warning. Part 1 still completes — you get the always-on voice and the dispatcher; agent-skill auto-load in agent contexts won't have local files to read, but the dispatcher still works.
 - If the GitHub API is rate-limited or unreachable, Part 2 warns and skips. Part 1 still completes.
 - Per-file download failures are reported but don't abort the install — re-run to retry.
+- After download, the installer restores the executable bit on every `.sh` file under `.github/skills/` (`curl -o` doesn't preserve it). The visual-companion `start-server.sh` / `stop-server.sh` and `find-polluter.sh` are runnable as documented in their SKILL.md.
 
 ### Manual install
 
 Copy `.github/copilot-instructions.md` and the `.github/skills/` tree from this repo into your repo's `.github/` directory yourself.
+
+## Path conventions
+
+A few skills assume specific paths under your repo root. These are created on first use by the skill (no installer setup needed), but it's worth knowing they exist:
+
+- `docs/plans/YYYY-MM-DD-<feature>.md` — where `writing-plans` saves implementation plans
+- `docs/specs/YYYY-MM-DD-<topic>-design.md` — where `brainstorming` saves design specs
+
+If your repo already uses different conventions for plan/spec docs, override these in your workspace instructions and the skills will follow your lead (skills explicitly note user preferences take precedence).
 
 ## Uninstall
 

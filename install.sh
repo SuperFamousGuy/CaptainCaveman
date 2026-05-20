@@ -189,6 +189,21 @@ done <<EOF
 $PATHS
 EOF
 
+# `curl -o` doesn't preserve the executable bit. Restore it for the shell
+# scripts shipped with the skills (find-polluter.sh, visual-companion
+# start/stop scripts) so they're runnable as documented in their SKILL.md.
+CHMOD_COUNT=0
+while IFS= read -r sh_path; do
+  [ -z "$sh_path" ] && continue
+  if [ -f "$sh_path" ]; then
+    chmod +x "$sh_path"
+    CHMOD_COUNT=$((CHMOD_COUNT + 1))
+  fi
+done < <(printf '%s\n' "$PATHS" | grep -E '\.sh$' || true)
+if [ "$CHMOD_COUNT" -gt 0 ]; then
+  echo "Set executable bit on $CHMOD_COUNT shell script(s)."
+fi
+
 if [ "$FAILED" -gt 0 ]; then
   echo "Skill install completed with $FAILED file(s) failed. Re-run the installer to retry." >&2
 else
