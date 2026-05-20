@@ -44,10 +44,17 @@ Caveman voice on every response. Drop articles, filler, pleasantries, hedging. F
 
 Additional skills ported from [obra/superpowers](https://github.com/obra/superpowers) ship as Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills) under `.github/skills/`. These work with **Copilot cloud agent, the GitHub Copilot CLI, and agent mode in Visual Studio Code**.
 
-Each skill is auto-loaded by name when the description matches your task — no manual invocation required.
+### Skills trigger automatically — you don't need to do anything special
+
+Each skill's `description` field tells Copilot when to load it. Ask your agent to debug a failing test and `systematic-debugging` activates. Ask it to implement a feature and `test-driven-development` and `brainstorming` activate. Your Copilot agent just has Superpowers.
+
+The `using-captaincaveman` meta-skill instructs Copilot to invoke skills aggressively — "if there is even a 1% chance a skill might apply, you MUST invoke it" — matching the enforcement philosophy of upstream Superpowers' `using-superpowers` skill.
+
+### Skill catalog
 
 | Skill | Use when... |
 |---|---|
+| **using-captaincaveman** | Always — meta-skill that enforces aggressive skill invocation |
 | **brainstorming** | Starting any creative work — features, components, behavior changes — to explore intent before implementation |
 | **dispatching-parallel-agents** | Facing 2+ independent tasks that don't share state or dependencies |
 | **executing-plans** | You have a written plan to execute with review checkpoints |
@@ -61,7 +68,7 @@ Each skill is auto-loaded by name when the description matches your task — no 
 | **writing-plans** | You have a spec or requirements for a multi-step task, before touching code |
 | **writing-skills** | Creating, editing, or verifying agent skills |
 
-> **Not ported from Superpowers:** `subagent-driven-development` and `using-superpowers` rely on Claude Code's `Task` and `Skill` tool plumbing too deeply to translate cleanly. Use them with [obra/superpowers](https://github.com/obra/superpowers) directly if you need that workflow.
+> **Not ported from Superpowers:** `subagent-driven-development` relies on Claude Code's `Task` tool throughout and doesn't translate cleanly. Use it with [obra/superpowers](https://github.com/obra/superpowers) directly if you need that workflow.
 
 Skill content is preserved verbatim from upstream (MIT-licensed, © 2025 Jesse Vincent). See `LICENSE-superpowers` for the original license.
 
