@@ -48,33 +48,29 @@ These trigger automatically when their `description` matches your request. No in
 
 > **Not ported:** `caveman-stats` from the original plugin relies on Claude Code session hooks and has no Copilot equivalent.
 
-## Agent skills (from Superpowers)
+## Superpowers skills (from `obra/superpowers`)
 
-Additional skills ported from [obra/superpowers](https://github.com/obra/superpowers) ship as Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills) under `.github/skills/`. These work with **Copilot cloud agent, the GitHub Copilot CLI, and agent mode in Visual Studio Code**.
+Additional skills ported from [obra/superpowers](https://github.com/obra/superpowers) ship under `.github/skills/`. **Same architecture as the Caveman/cavecrew skills above:** the dispatcher in `copilot-instructions.md` routes intent to the relevant skill, so they fire universally across every Copilot client — not just in cloud agent, Copilot CLI, and VS Code agent mode (where Copilot's native agent-skill auto-loading would also fire them).
 
-### Skills trigger automatically — you don't need to do anything special
-
-Each skill's `description` field tells Copilot when to load it. Ask your agent to debug a failing test and `systematic-debugging` activates. Ask it to implement a feature and `test-driven-development` and `brainstorming` activate. Your Copilot agent just has Superpowers.
-
-The `using-captaincaveman` meta-skill instructs Copilot to invoke skills aggressively — "if there is even a 1% chance a skill might apply, you MUST invoke it" — matching the enforcement philosophy of upstream Superpowers' `using-superpowers` skill.
+The `using-captaincaveman` meta-skill enforces the aggressive-invocation philosophy from upstream — "if there is even a 1% chance a skill might apply, you MUST invoke it."
 
 ### Skill catalog
 
-| Skill | Use when... |
+| Skill | Use when you... |
 |---|---|
-| **using-captaincaveman** | Always — meta-skill that enforces aggressive skill invocation |
-| **brainstorming** | Starting any creative work — features, components, behavior changes — to explore intent before implementation |
-| **dispatching-parallel-agents** | Facing 2+ independent tasks that don't share state or dependencies |
-| **executing-plans** | You have a written plan to execute with review checkpoints |
-| **finishing-a-development-branch** | Implementation complete, tests pass, ready to merge/PR/clean up |
-| **receiving-code-review** | Working through review feedback with rigor instead of performative agreement |
-| **requesting-code-review** | Before merging — to verify the work meets requirements |
-| **systematic-debugging** | Any bug, test failure, or unexpected behavior, before proposing fixes |
-| **test-driven-development** | Implementing any feature or bugfix — write the test first |
-| **using-git-worktrees** | Starting feature work that needs isolation from the current workspace |
-| **verification-before-completion** | About to claim work is complete — run the verification first |
-| **writing-plans** | You have a spec or requirements for a multi-step task, before touching code |
-| **writing-skills** | Creating, editing, or verifying agent skills |
+| `using-captaincaveman` | Always — meta-skill that enforces aggressive skill invocation |
+| `brainstorming` | ...start any creative work — features, components, behavior changes — to explore intent before implementation |
+| `dispatching-parallel-agents` | ...face 2+ independent tasks that don't share state or dependencies |
+| `executing-plans` | ...have a written plan to execute with review checkpoints |
+| `finishing-a-development-branch` | ...have implementation complete, tests passing, ready to merge/PR/clean up |
+| `receiving-code-review` | ...work through review feedback with rigor instead of performative agreement |
+| `requesting-code-review` | ...are about to merge and want the work verified against requirements |
+| `systematic-debugging` | ...hit any bug, test failure, or unexpected behavior, before proposing fixes |
+| `test-driven-development` | ...are about to write implementation code for any feature or bugfix |
+| `using-git-worktrees` | ...start feature work that needs isolation from the current workspace |
+| `verification-before-completion` | ...are about to claim work is complete — run the verification first |
+| `writing-plans` | ...have a spec or requirements for a multi-step task, before touching code |
+| `writing-skills` | ...are creating, editing, or verifying an agent skill |
 
 > **Not ported from Superpowers:** `subagent-driven-development` relies on Claude Code's `Task` tool throughout and doesn't translate cleanly. Use it with [obra/superpowers](https://github.com/obra/superpowers) directly if you need that workflow.
 
