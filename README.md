@@ -14,12 +14,16 @@ This repo packages Caveman as a single GitHub Copilot workspace instructions fil
 
 ## How it works
 
-CaptainCaveman uses two complementary Copilot mechanisms:
+CaptainCaveman uses two complementary Copilot mechanisms, wired together so the skills fire **everywhere** without slash commands or manual invocation:
 
-1. **`.github/copilot-instructions.md`** — auto-loaded by every Copilot client on every chat. Holds the **always-on caveman voice**, the one behavior that needs universal coverage.
-2. **`.github/skills/<name>/SKILL.md`** — Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). Each skill has a `description` field that tells Copilot when to load it. Bounded task behaviors (commit messages, terse reviews, surgical edits, symbol locators) live here. **Auto-trigger by description match — no slash commands, no toggles.**
+1. **`.github/copilot-instructions.md`** — auto-loaded by every Copilot client on every chat. Holds the **always-on caveman voice** plus an **automatic skill-invocation dispatcher** table that tells Copilot which skill to load for which kind of task.
+2. **`.github/skills/<name>/SKILL.md`** — Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). Each skill has a `description` field that tells Copilot when to load it. Bounded task behaviors (commit messages, terse reviews, surgical edits, symbol locators, debugging, TDD, etc.) live here as the **single source of truth** for their content.
 
-Agent skills auto-load in **Copilot cloud agent, the GitHub Copilot CLI, and agent mode in Visual Studio Code**. The always-on voice runs in *every* Copilot context, including the ones where agent skills aren't available.
+### Why the dispatcher exists
+
+Copilot's native agent-skill auto-loading only fires in **cloud agent, Copilot CLI, and VS Code agent mode**. In regular Copilot Chat / inline chat / github.com chat / JetBrains / completions, Copilot doesn't automatically scan `.github/skills/*/SKILL.md`. The dispatcher table in `copilot-instructions.md` closes that gap — Copilot reads it on every chat in any context and follows the "if user about to do X, invoke skill Y" routing.
+
+**Net result:** drop these files into your `.github/` and the skills fire automatically in every Copilot client. No prompts, no slash commands, no toggles.
 
 ## Caveman skills
 
