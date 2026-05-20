@@ -1,26 +1,58 @@
 #!/usr/bin/env bash
-# Bisection script to find which test creates unwanted files/state
-# Usage: ./find-polluter.sh <file_or_dir_to_check> <test_pattern>
-# Example: ./find-polluter.sh '.git' 'src/**/*.test.ts'
+# Bisection script to find which test creates unwanted files/state.
+#
+# Usage:
+#   ./find-polluter.sh <pollution_check> <search_dir> [name_glob]
+#
+# Examples:
+#   ./find-polluter.sh '.git'   src                 '*.test.ts'
+#   ./find-polluter.sh logs/    tests               '*_spec.rb'
+#   ./find-polluter.sh tmp/x    .                   '*.spec.js'
+#
+# Backward-compat usage (deprecated):
+#   ./find-polluter.sh <pollution_check> <test_pattern>
+#   — where <test_pattern> is interpreted as a name glob and the search
+#   root defaults to '.'. Useful if you previously called with patterns
+#   like 'src/**/*.test.ts' (note: `**` is NOT a portable find token; use
+#   the new 3-argument form instead).
 
 set -e
 
-if [ $# -ne 2 ]; then
-  echo "Usage: $0 <file_to_check> <test_pattern>"
-  echo "Example: $0 '.git' 'src/**/*.test.ts'"
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "Usage: $0 <pollution_check> <search_dir> [name_glob]" >&2
+  echo "       $0 <pollution_check> <name_glob>           (legacy 2-arg form)" >&2
   exit 1
 fi
 
 POLLUTION_CHECK="$1"
-TEST_PATTERN="$2"
+
+if [ $# -eq 3 ]; then
+  SEARCH_DIR="$2"
+  NAME_GLOB="$3"
+else
+  SEARCH_DIR="."
+  NAME_GLOB="$2"
+fi
+
+if [ ! -d "$SEARCH_DIR" ]; then
+  echo "Error: search directory '$SEARCH_DIR' not found." >&2
+  exit 1
+fi
 
 echo "🔍 Searching for test that creates: $POLLUTION_CHECK"
-echo "Test pattern: $TEST_PATTERN"
+echo "Search dir: $SEARCH_DIR"
+echo "Name glob:  $NAME_GLOB"
 echo ""
 
-# Get list of test files
-TEST_FILES=$(find . -path "$TEST_PATTERN" | sort)
-TOTAL=$(echo "$TEST_FILES" | wc -l | tr -d ' ')
+# Use -name (a portable glob match against the file basename) instead of
+# -path (which treats * as not crossing / and doesn't understand `**`).
+TEST_FILES=$(find "$SEARCH_DIR" -type f -name "$NAME_GLOB" | sort)
+TOTAL=$(echo "$TEST_FILES" | grep -c . || echo 0)
+
+if [ "$TOTAL" -eq 0 ]; then
+  echo "Error: no files matched $NAME_GLOB under $SEARCH_DIR" >&2
+  exit 1
+fi
 
 echo "Found $TOTAL test files"
 echo ""
@@ -38,7 +70,7 @@ for TEST_FILE in $TEST_FILES; do
 
   echo "[$COUNT/$TOTAL] Testing: $TEST_FILE"
 
-  # Run the test
+  # Run the test. Replace `npm test` with your project's runner if needed.
   npm test "$TEST_FILE" > /dev/null 2>&1 || true
 
   # Check if pollution appeared

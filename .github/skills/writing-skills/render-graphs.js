@@ -19,7 +19,8 @@ const { execSync } = require('child_process');
 
 function extractDotBlocks(markdown) {
   const blocks = [];
-  const regex = /```dot\n([\s\S]*?)```/g;
+  // Tolerate both LF and CRLF line endings (Windows-checked-out repos).
+  const regex = /```dot\r?\n([\s\S]*?)```/g;
   let match;
 
   while ((match = regex.exec(markdown)) !== null) {
@@ -107,13 +108,17 @@ function main() {
     process.exit(1);
   }
 
-  // Check if dot is available
+  // Check if dot is available. Use `dot -V` (writes to stderr on every
+  // platform that has graphviz installed) rather than `which dot` —
+  // `which` isn't present on Windows by default and behaves inconsistently
+  // across shells.
   try {
-    execSync('which dot', { encoding: 'utf-8' });
+    execSync('dot -V', { stdio: ['ignore', 'ignore', 'ignore'] });
   } catch {
     console.error('Error: graphviz (dot) not found. Install with:');
     console.error('  brew install graphviz    # macOS');
-    console.error('  apt install graphviz     # Linux');
+    console.error('  apt install graphviz     # Debian/Ubuntu');
+    console.error('  choco install graphviz   # Windows');
     process.exit(1);
   }
 

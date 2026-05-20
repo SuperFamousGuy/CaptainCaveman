@@ -17,12 +17,22 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Verify Tests
 
-**Before presenting options, verify tests pass:**
+**Before presenting options, verify tests pass.** Detect the project type from files present and run the appropriate command:
 
 ```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
+# Pick the command matching the project (detect via files in the repo root):
+#   package.json                              → npm test  (or yarn test / pnpm test)
+#   Cargo.toml                                → cargo test
+#   pyproject.toml / requirements.txt / setup.py → pytest  (or python -m pytest)
+#   go.mod                                    → go test ./...
+#   *.csproj / *.sln / global.json            → dotnet test
+#   Gemfile                                   → bundle exec rspec  (or rake test)
+#   composer.json                             → vendor/bin/phpunit
+#   pom.xml / build.gradle*                   → mvn test  /  ./gradlew test
+#   Makefile with a `test` target             → make test
 ```
+
+If the project uses multiple ecosystems (monorepo, polyglot), run each. If a custom test command is documented in `README.md`, `CONTRIBUTING.md`, or the workspace instructions file, prefer that.
 
 **If tests fail:**
 ```
@@ -106,7 +116,8 @@ git checkout <base-branch>
 git pull
 git merge <feature-branch>
 
-# Verify tests on merged result
+# Verify tests on merged result (use the same command detected in Step 1 —
+# e.g. `npm test`, `cargo test`, `pytest`, `go test ./...`, `dotnet test`, etc.)
 <test command>
 
 # Only after merge succeeds: cleanup worktree (Step 6), then delete branch
