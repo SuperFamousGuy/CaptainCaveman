@@ -14,59 +14,63 @@ This repo packages Caveman as a single GitHub Copilot workspace instructions fil
 
 ## How it works
 
-Everything lives in one file: `.github/copilot-instructions.md`. GitHub Copilot auto-loads this on every chat in the workspace.
+CaptainCaveman uses two complementary Copilot mechanisms, wired together so the skills fire **everywhere** without slash commands or manual invocation:
 
-- **Caveman voice is always on.** Every response drops articles, filler, hedging, pleasantries. Technical substance preserved exactly. Applies to every Copilot reply.
-- **Task formats layer on top.** When you ask for a commit message, the response uses Conventional Commits format. When you ask to review a diff, the response uses one-line severity-tagged findings. These trigger from user intent — you don't have to invoke them by name.
+1. **`.github/copilot-instructions.md`** — auto-loaded by every Copilot client on every chat. Holds the **always-on caveman voice** plus an **automatic skill-invocation dispatcher** table that tells Copilot which skill to load for which kind of task.
+2. **`.github/skills/<name>/SKILL.md`** — Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). Each skill has a `description` field that tells Copilot when to load it. Bounded task behaviors (commit messages, terse reviews, surgical edits, symbol locators, debugging, TDD, etc.) live here as the **single source of truth** for their content.
 
-## Behaviors included
+### Why the dispatcher exists
 
-### Always on
+Copilot's native agent-skill auto-loading only fires in **cloud agent, Copilot CLI, and VS Code agent mode**. In regular Copilot Chat / inline chat / github.com chat / JetBrains / completions, Copilot doesn't automatically scan `.github/skills/*/SKILL.md`. The dispatcher table in `copilot-instructions.md` closes that gap — Copilot reads it on every chat in any context and follows the "if user about to do X, invoke skill Y" routing.
+
+**Net result:** drop these files into your `.github/` and the skills fire automatically in every Copilot client. No prompts, no slash commands, no toggles.
+
+## Caveman skills
+
+### Always on (in `copilot-instructions.md`)
 
 Caveman voice on every response. Drop articles, filler, pleasantries, hedging. Fragments OK. Code blocks untouched. Technical terms exact.
 
-### Triggered by intent
+### Agent skills (in `.github/skills/`)
 
-| Behavior | Triggered when you... | What you get |
-|---|---|---|
-| Commit messages | ...ask to write or generate a commit message | Conventional Commits format, ≤50 char subject, body only when "why" isn't obvious |
-| Code review | ...ask to review a PR/diff/file | One-line severity-tagged findings: `file:L42: 🔴 bug: problem. fix.` |
-| Markdown compression | ...ask to compress a `.md` file | Prose reduced ~46%, code/structure preserved |
-| Symbol locator | ...ask "where is X defined", "what calls Y", "list uses of Z" | `file:line` table, no prose explanation |
-| Surgical edit | ...ask for a focused 1-2 file change | Diff receipt; refuses 3+ file scope with `too-big.` |
-| Diff review (chained) | ...ask for terse review in an investigate→fix→audit flow | Same severity-tagged format, bounded-scope contract |
-| Routing help | ...ask "which behavior should I use" or "how do I do X" | Quick routing table |
-| Reference card | ...ask what's available | Inline summary of everything |
+These trigger automatically when their `description` matches your request. No invocation needed.
+
+| Skill | Use when you... |
+|---|---|
+| `caveman-commit` | ...ask to write/generate a commit message |
+| `caveman-review` | ...ask to review a PR, diff, or file |
+| `caveman-compress` | ...ask to compress a `.md` or `.txt` file |
+| `caveman-help` | ...ask what skills are available |
+| `cavecrew-investigator` | ...ask "where is X defined", "what calls Y", "list uses of Z" |
+| `cavecrew-builder` | ...ask for a focused 1-2 file edit |
+| `cavecrew-reviewer` | ...want a bounded-scope diff review (investigate→fix→audit flow) |
+| `cavecrew` | ...ask which skill to use |
 
 > **Not ported:** `caveman-stats` from the original plugin relies on Claude Code session hooks and has no Copilot equivalent.
 
-## Agent skills (from Superpowers)
+## Superpowers skills (from `obra/superpowers`)
 
-Additional skills ported from [obra/superpowers](https://github.com/obra/superpowers) ship as Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills) under `.github/skills/`. These work with **Copilot cloud agent, the GitHub Copilot CLI, and agent mode in Visual Studio Code**.
+Additional skills ported from [obra/superpowers](https://github.com/obra/superpowers) ship under `.github/skills/`. **Same architecture as the Caveman/cavecrew skills above:** the dispatcher in `copilot-instructions.md` routes intent to the relevant skill, so they fire universally across every Copilot client — not just in cloud agent, Copilot CLI, and VS Code agent mode (where Copilot's native agent-skill auto-loading would also fire them).
 
-### Skills trigger automatically — you don't need to do anything special
-
-Each skill's `description` field tells Copilot when to load it. Ask your agent to debug a failing test and `systematic-debugging` activates. Ask it to implement a feature and `test-driven-development` and `brainstorming` activate. Your Copilot agent just has Superpowers.
-
-The `using-captaincaveman` meta-skill instructs Copilot to invoke skills aggressively — "if there is even a 1% chance a skill might apply, you MUST invoke it" — matching the enforcement philosophy of upstream Superpowers' `using-superpowers` skill.
+The `using-captaincaveman` meta-skill enforces the aggressive-invocation philosophy from upstream — "if there is even a 1% chance a skill might apply, you MUST invoke it."
 
 ### Skill catalog
 
-| Skill | Use when... |
+| Skill | Use when you... |
 |---|---|
-| **using-captaincaveman** | Always — meta-skill that enforces aggressive skill invocation |
-| **brainstorming** | Starting any creative work — features, components, behavior changes — to explore intent before implementation |
-| **dispatching-parallel-agents** | Facing 2+ independent tasks that don't share state or dependencies |
-| **executing-plans** | You have a written plan to execute with review checkpoints |
-| **finishing-a-development-branch** | Implementation complete, tests pass, ready to merge/PR/clean up |
-| **receiving-code-review** | Working through review feedback with rigor instead of performative agreement |
-| **requesting-code-review** | Before merging — to verify the work meets requirements |
-| **systematic-debugging** | Any bug, test failure, or unexpected behavior, before proposing fixes |
-| **test-driven-development** | Implementing any feature or bugfix — write the test first |
-| **using-git-worktrees** | Starting feature work that needs isolation from the current workspace |
-| **verification-before-completion** | About to claim work is complete — run the verification first |
-| **writing-plans** | You have a spec or requirements for a multi-step task, before touching code |
-| **writing-skills** | Creating, editing, or verifying agent skills |
+| `using-captaincaveman` | Always — meta-skill that enforces aggressive skill invocation |
+| `brainstorming` | ...start any creative work — features, components, behavior changes — to explore intent before implementation |
+| `dispatching-parallel-agents` | ...face 2+ independent tasks that don't share state or dependencies |
+| `executing-plans` | ...have a written plan to execute with review checkpoints |
+| `finishing-a-development-branch` | ...have implementation complete, tests passing, ready to merge/PR/clean up |
+| `receiving-code-review` | ...work through review feedback with rigor instead of performative agreement |
+| `requesting-code-review` | ...are about to merge and want the work verified against requirements |
+| `systematic-debugging` | ...hit any bug, test failure, or unexpected behavior, before proposing fixes |
+| `test-driven-development` | ...are about to write implementation code for any feature or bugfix |
+| `using-git-worktrees` | ...start feature work that needs isolation from the current workspace |
+| `verification-before-completion` | ...are about to claim work is complete — run the verification first |
+| `writing-plans` | ...have a spec or requirements for a multi-step task, before touching code |
+| `writing-skills` | ...are creating, editing, or verifying an agent skill |
 
 > **Not ported from Superpowers:** `subagent-driven-development` relies on Claude Code's `Task` tool throughout and doesn't translate cleanly. Use it with [obra/superpowers](https://github.com/obra/superpowers) directly if you need that workflow.
 
