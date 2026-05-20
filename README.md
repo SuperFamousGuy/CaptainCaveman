@@ -14,29 +14,33 @@ This repo packages Caveman as a single GitHub Copilot workspace instructions fil
 
 ## How it works
 
-Everything lives in one file: `.github/copilot-instructions.md`. GitHub Copilot auto-loads this on every chat in the workspace.
+CaptainCaveman uses two complementary Copilot mechanisms:
 
-- **Caveman voice is always on.** Every response drops articles, filler, hedging, pleasantries. Technical substance preserved exactly. Applies to every Copilot reply.
-- **Task formats layer on top.** When you ask for a commit message, the response uses Conventional Commits format. When you ask to review a diff, the response uses one-line severity-tagged findings. These trigger from user intent — you don't have to invoke them by name.
+1. **`.github/copilot-instructions.md`** — auto-loaded by every Copilot client on every chat. Holds the **always-on caveman voice**, the one behavior that needs universal coverage.
+2. **`.github/skills/<name>/SKILL.md`** — Copilot [agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills). Each skill has a `description` field that tells Copilot when to load it. Bounded task behaviors (commit messages, terse reviews, surgical edits, symbol locators) live here. **Auto-trigger by description match — no slash commands, no toggles.**
 
-## Behaviors included
+Agent skills auto-load in **Copilot cloud agent, the GitHub Copilot CLI, and agent mode in Visual Studio Code**. The always-on voice runs in *every* Copilot context, including the ones where agent skills aren't available.
 
-### Always on
+## Caveman skills
+
+### Always on (in `copilot-instructions.md`)
 
 Caveman voice on every response. Drop articles, filler, pleasantries, hedging. Fragments OK. Code blocks untouched. Technical terms exact.
 
-### Triggered by intent
+### Agent skills (in `.github/skills/`)
 
-| Behavior | Triggered when you... | What you get |
-|---|---|---|
-| Commit messages | ...ask to write or generate a commit message | Conventional Commits format, ≤50 char subject, body only when "why" isn't obvious |
-| Code review | ...ask to review a PR/diff/file | One-line severity-tagged findings: `file:L42: 🔴 bug: problem. fix.` |
-| Markdown compression | ...ask to compress a `.md` file | Prose reduced ~46%, code/structure preserved |
-| Symbol locator | ...ask "where is X defined", "what calls Y", "list uses of Z" | `file:line` table, no prose explanation |
-| Surgical edit | ...ask for a focused 1-2 file change | Diff receipt; refuses 3+ file scope with `too-big.` |
-| Diff review (chained) | ...ask for terse review in an investigate→fix→audit flow | Same severity-tagged format, bounded-scope contract |
-| Routing help | ...ask "which behavior should I use" or "how do I do X" | Quick routing table |
-| Reference card | ...ask what's available | Inline summary of everything |
+These trigger automatically when their `description` matches your request. No invocation needed.
+
+| Skill | Use when you... |
+|---|---|
+| `caveman-commit` | ...ask to write/generate a commit message |
+| `caveman-review` | ...ask to review a PR, diff, or file |
+| `caveman-compress` | ...ask to compress a `.md` or `.txt` file |
+| `caveman-help` | ...ask what skills are available |
+| `cavecrew-investigator` | ...ask "where is X defined", "what calls Y", "list uses of Z" |
+| `cavecrew-builder` | ...ask for a focused 1-2 file edit |
+| `cavecrew-reviewer` | ...want a bounded-scope diff review (investigate→fix→audit flow) |
+| `cavecrew` | ...ask which skill to use |
 
 > **Not ported:** `caveman-stats` from the original plugin relies on Claude Code session hooks and has no Copilot equivalent.
 
