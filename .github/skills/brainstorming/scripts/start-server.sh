@@ -109,9 +109,15 @@ fi
 
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
+  # Write PID *then* exec so the wrapper shell is replaced by node and
+  # keeps the same PID ($$). stop-server.sh sends signals to this PID;
+  # without `exec`, it would kill the wrapper shell and leave the node
+  # child orphaned.
   echo "$$" > "$PID_FILE"
-  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs
-  exit $?
+  exec env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs
+  # exec doesn't return; the line below is only reached if exec itself fails.
+  echo '{"error": "exec node failed"}' >&2
+  exit 127
 fi
 
 # Start server, capturing output to log file

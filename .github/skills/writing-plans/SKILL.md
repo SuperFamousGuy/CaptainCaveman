@@ -62,46 +62,88 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Task Structure
 
+The template below is **language-agnostic** — substitute the file extensions, code, and test-runner command for whatever the project actually uses. Detect the project type before writing the plan (see the project-detection table in the README, or look at the existing tooling configs in the repo: `package.json`, `Cargo.toml`, `*.csproj`/`*.sln`, `pyproject.toml`, `go.mod`, `Gemfile`, etc.).
+
 ````markdown
 ### Task N: [Component Name]
 
 **Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
+- Create: `exact/path/to/file.<ext>`
+- Modify: `exact/path/to/existing.<ext>:123-145`
+- Test: `tests/exact/path/to/test.<ext>`
 
 - [ ] **Step 1: Write the failing test**
 
-```python
-def test_specific_behavior():
+```<lang>
+// Pseudocode — substitute the project's actual test framework
+test "specific behavior" {
     result = function(input)
     assert result == expected
+}
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
+Run: `<project's test-runner command, filtered to this test>`
+Expected: FAIL with "function not defined" (or equivalent)
 
 - [ ] **Step 3: Write minimal implementation**
 
-```python
-def function(input):
-    return expected
+```<lang>
+function(input) { return expected }
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pytest tests/path/test.py::test_name -v`
+Run: `<same test-runner command>`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/path/test.py src/path/file.py
+git add tests/path/test.<ext> src/path/file.<ext>
 git commit -m "feat: add specific feature"
 ```
 ````
+
+### Worked examples for common stacks
+
+**Python / pytest:**
+```
+- Create: `src/auth.py`
+- Test:   `tests/test_auth.py`
+- Run:    `pytest tests/test_auth.py::test_token_expiry -v`
+```
+
+**.NET / xUnit:**
+```
+- Create: `src/Auth/TokenValidator.cs`
+- Test:   `tests/Auth.Tests/TokenValidatorTests.cs`
+- Run:    `dotnet test --filter FullyQualifiedName~TokenValidatorTests.TokenExpiry`
+```
+
+**Node / Vitest or Jest:**
+```
+- Create: `src/auth.ts`
+- Test:   `src/auth.test.ts`
+- Run:    `npm test -- auth.test.ts -t "token expiry"`
+```
+
+**Rust / cargo:**
+```
+- Create: `src/auth.rs`
+- Test:   inline `#[cfg(test)] mod tests { ... }`
+- Run:    `cargo test auth::tests::token_expiry`
+```
+
+**Go:**
+```
+- Create: `auth/token.go`
+- Test:   `auth/token_test.go`
+- Run:    `go test ./auth -run TestTokenExpiry -v`
+```
+
+Use whichever pattern matches the project. If unsure, read existing tests in the codebase and copy their conventions exactly.
 
 ## No Placeholders
 
