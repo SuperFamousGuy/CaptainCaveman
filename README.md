@@ -167,6 +167,8 @@ If your repo already uses different conventions for plan/spec docs, override the
 
 Polyglot/monorepo? Each detected ecosystem runs its own setup and tests.
 
+`writing-plans` complements this with **language-agnostic task templates plus worked test-runner examples** for Python/pytest, .NET/xUnit, Node/Vitest, Rust/cargo, and Go — so plan steps land with the right `pytest …` / `dotnet test --filter …` / `npm test …` invocation for your stack instead of a default Python pattern.
+
 ## Security considerations
 
 The `brainstorming` skill's optional **visual-companion** mode spins up a local web server (`brainstorming/scripts/start-server.sh`) so you can preview HTML mockups in a browser. By default it binds to `127.0.0.1` and is safe.
