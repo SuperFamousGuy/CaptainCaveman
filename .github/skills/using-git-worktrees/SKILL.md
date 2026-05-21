@@ -84,27 +84,43 @@ Follow this priority order. Explicit user preference always beats observed files
 
 #### Safety Verification (project-local directories only)
 
-**MUST verify directory is ignored before creating worktree:**
+**MUST verify the chosen directory is ignored before creating the worktree.** Track which directory you picked in a variable and check that exact path — checking both `.worktrees` and `worktrees` indiscriminately can produce false positives (e.g. `.worktrees` is ignored but you chose `worktrees`):
 
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+# LOCATION is whichever directory you picked in Steps 1–1b
+# (e.g. ".worktrees" or "worktrees" — not both).
+if ! git check-ignore -q "$LOCATION" 2>/dev/null; then
+  echo "Error: '$LOCATION' is not in .gitignore — add it and commit before continuing." >&2
+  exit 1
+fi
 ```
 
-**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+**If NOT ignored:** Add `$LOCATION/` to `.gitignore`, commit the change, then re-run the check.
 
-**Why critical:** Prevents accidentally committing worktree contents to repository.
+**Why critical:** Prevents accidentally committing worktree contents to the repository.
 
 Global directories (`~/.config/superpowers/worktrees/`) need no verification.
 
 #### Create the Worktree
 
 ```bash
+# 1. Identify the project.
 project=$(basename "$(git rev-parse --show-toplevel)")
 
-# Determine path based on chosen location
-# For project-local: path="$LOCATION/$BRANCH_NAME"
-# For global: path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
+# 2. Pick a branch name for the new worktree. Use the branch name the
+#    user gave you, or derive one from the task (e.g. "feat/cleanup-tests").
+BRANCH_NAME="<your-branch-name>"
 
+# 3. Compute the absolute worktree path from the LOCATION you chose in
+#    Step 1 and the branch name. Pick ONE of:
+#
+#    a. Project-local (LOCATION is ".worktrees" or "worktrees"):
+path="$(git rev-parse --show-toplevel)/$LOCATION/$BRANCH_NAME"
+#
+#    b. Global (LOCATION is "$HOME/.config/superpowers/worktrees/$project"):
+# path="$LOCATION/$BRANCH_NAME"
+
+# 4. Create the worktree and move into it.
 git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
@@ -128,6 +144,21 @@ if [ -f pyproject.toml ]; then poetry install; fi
 
 # Go
 if [ -f go.mod ]; then go mod download; fi
+
+# .NET (any *.sln, *.csproj/*.fsproj/*.vbproj, or global.json)
+if ls *.sln *.csproj *.fsproj *.vbproj global.json 2>/dev/null | grep -q .; then
+  dotnet restore
+fi
+
+# Ruby
+if [ -f Gemfile ]; then bundle install; fi
+
+# PHP
+if [ -f composer.json ]; then composer install; fi
+
+# Java / Kotlin
+if [ -f pom.xml ]; then mvn -q dependency:resolve; fi
+if [ -f build.gradle ] || [ -f build.gradle.kts ]; then ./gradlew --no-daemon dependencies > /dev/null; fi
 ```
 
 ## Step 4: Verify Clean Baseline

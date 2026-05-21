@@ -66,12 +66,35 @@ This determines which menu to show and how cleanup works:
 
 ### Step 3: Determine Base Branch
 
+Resolve the base **branch name** (not a commit SHA) and store it in `BASE_BRANCH`. Try the remote's default first, then fall back to local conventions:
+
 ```bash
-# Try common base branches
-git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
+# 1. Prefer the remote's default branch (origin/HEAD points at it).
+BASE_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null \
+  | sed 's@^origin/@@')
+
+# 2. Fallback: pick the first local branch that exists out of main / master / develop / trunk.
+if [ -z "$BASE_BRANCH" ]; then
+  for candidate in main master develop trunk; do
+    if git show-ref --verify --quiet "refs/heads/$candidate" \
+        || git show-ref --verify --quiet "refs/remotes/origin/$candidate"; then
+      BASE_BRANCH="$candidate"
+      break
+    fi
+  done
+fi
+
+# 3. Last resort: ask the user.
+if [ -z "$BASE_BRANCH" ]; then
+  echo "Could not detect a base branch. Ask the user which branch this should merge back into."
+fi
+
+echo "Base branch: $BASE_BRANCH"
 ```
 
-Or ask: "This branch split from main - is that correct?"
+`BASE_BRANCH` is consumed by Step 4 (the option text) and Step 5 (Option 1's `git checkout <base-branch>` / `git merge` calls) — substitute `$BASE_BRANCH` wherever this skill writes `<base-branch>`.
+
+Or ask the user directly: `"This branch should merge into $BASE_BRANCH — is that correct?"`
 
 ### Step 4: Present Options
 
@@ -80,7 +103,7 @@ Or ask: "This branch split from main - is that correct?"
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
+1. Merge back to `$BASE_BRANCH` locally
 2. Push and create a Pull Request
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
@@ -111,10 +134,11 @@ Which option?
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 
-# Merge first — verify success before removing anything
-git checkout <base-branch>
+# Merge first — verify success before removing anything.
+# BASE_BRANCH was resolved in Step 3 above.
+git checkout "$BASE_BRANCH"
 git pull
-git merge <feature-branch>
+git merge "$FEATURE_BRANCH"  # set FEATURE_BRANCH=$(git branch --show-current) before checkout
 
 # Verify tests on merged result (use the same command detected in Step 1 —
 # e.g. `npm test`, `cargo test`, `pytest`, `go test ./...`, `dotnet test`, etc.)
