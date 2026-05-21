@@ -150,6 +150,29 @@ A few skills assume specific paths under your repo root. These are created on fi
 
 If your repo already uses different conventions for plan/spec docs, override these in your workspace instructions and the skills will follow your lead (skills explicitly note user preferences take precedence).
 
+## Project type detection
+
+`using-git-worktrees` (Step 3 — project setup) and `finishing-a-development-branch` (Step 1 — verify tests) both auto-detect the project type from files in the repo root and run the appropriate install/test command. Supported out of the box:
+
+| Files present | Setup command | Test command |
+|---|---|---|
+| `package.json` | `npm install` | `npm test` |
+| `Cargo.toml` | `cargo build` | `cargo test` |
+| `requirements.txt` / `pyproject.toml` | `pip install` / `poetry install` | `pytest` |
+| `go.mod` | `go mod download` | `go test ./...` |
+| `*.sln` / `*.csproj` / `*.fsproj` / `*.vbproj` / `global.json` | `dotnet restore` | `dotnet test` |
+| `Gemfile` | `bundle install` | `bundle exec rspec` |
+| `composer.json` | `composer install` | `vendor/bin/phpunit` |
+| `pom.xml` / `build.gradle*` | `mvn dependency:resolve` / `./gradlew dependencies` | `mvn test` / `./gradlew test` |
+
+Polyglot/monorepo? Each detected ecosystem runs its own setup and tests.
+
+## Security considerations
+
+The `brainstorming` skill's optional **visual-companion** mode spins up a local web server (`brainstorming/scripts/start-server.sh`) so you can preview HTML mockups in a browser. By default it binds to `127.0.0.1` and is safe.
+
+If you switch it to `--host 0.0.0.0` (sometimes needed in remote/containerized setups), **the server becomes reachable from every network interface on the host with no authentication**. Only do this on a trusted network. For remote work, prefer **SSH port forwarding** (`ssh -L 8765:127.0.0.1:8765 user@remote-host`) and leave the server bound to localhost. See `visual-companion.md` in the skill directory for the full security note and safer alternatives.
+
 ## Uninstall
 
 Delete the file (if CaptainCaveman is the only thing in `copilot-instructions.md`), or remove everything between the `<!-- BEGIN CAPTAINCAVEMAN -->` and `<!-- END CAPTAINCAVEMAN -->` markers. Optionally remove the `.github/skills/` tree.
