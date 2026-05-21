@@ -91,6 +91,25 @@ scripts/start-server.sh \
 
 Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
+> ### ⚠️ Security warning: binding to `0.0.0.0`
+>
+> `0.0.0.0` makes the visual-companion server reachable from **every network interface on the host**, not just your browser. There is no authentication. Anyone on the same network — coffee-shop wifi, a shared VPN, a corporate LAN, a multi-tenant cloud VM — can read every screen you write and see the project directory you exposed.
+>
+> **Only bind `0.0.0.0` on a trusted network you control.** Don't do it on public wifi or any shared environment.
+>
+> **Safer alternatives for remote work:**
+>
+> - **SSH port forwarding** (recommended). Keep the server bound to `127.0.0.1` on the remote and tunnel the port to your laptop:
+>   ```bash
+>   ssh -L 8765:127.0.0.1:8765 user@remote-host
+>   # then run start-server.sh on the remote *without* --host
+>   # and open http://localhost:8765 in your local browser
+>   ```
+> - **VS Code / JetBrains Remote / Codespaces** — these forward ports automatically; you don't need `--host 0.0.0.0` at all.
+> - **Bind to a specific private interface** (`--host 10.0.0.5`) if the host has a NIC on a network only you can reach.
+>
+> If you must use `0.0.0.0`, stop the server with `stop-server.sh` as soon as the brainstorming session is done.
+
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:

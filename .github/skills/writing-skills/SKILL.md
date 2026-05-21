@@ -7,7 +7,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 ## Overview
 
-**Writing skills IS Test-Driven Development applied to process documentation.**
+**Writing skills is the same discipline as Test-Driven Development, applied to process documentation.**
 
 **Personal skills live in agent-specific directories (`~/.copilot/skills/` for Copilot, `~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** 
 
@@ -71,12 +71,13 @@ API docs, syntax guides, tool documentation (office docs)
 
 ## Directory Structure
 
+> **Note on `skills/` below:** `skills/` is a placeholder for whatever directory your environment uses as the skills root. **In this repo (Copilot-targeted) that is `.github/skills/`.** Personal skills go under `~/.copilot/skills/` (Copilot), `~/.claude/skills/` (Claude Code), or `~/.agents/skills/` (Codex). Don't create a new top-level `skills/` directory unless your environment expects one.
 
 ```
-skills/
+<skills-root>/                 # e.g. .github/skills/ in this repo
   skill-name/
-    SKILL.md              # Main reference (required)
-    supporting-file.*     # Only if needed
+    SKILL.md                   # Main reference (required)
+    supporting-file.*          # Only if needed
 ```
 
 **Flat namespace** - all skills in one searchable namespace
@@ -260,7 +261,8 @@ You: Searching...
 
 **Verification:**
 ```bash
-wc -w skills/path/SKILL.md
+wc -w <skills-root>/<skill-name>/SKILL.md
+# e.g. wc -w .github/skills/brainstorming/SKILL.md
 # getting-started workflows: aim for <150 each
 # Other frequently-loaded: aim for <200 total
 ```
