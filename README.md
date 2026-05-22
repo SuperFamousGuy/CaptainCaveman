@@ -173,6 +173,8 @@ The `brainstorming` skill's optional **visual-companion** mode spins up a local 
 
 If you switch it to `--host 0.0.0.0` (sometimes needed in remote/containerized setups), **the server becomes reachable from every network interface on the host with no authentication**. Only do this on a trusted network. For remote work, prefer **SSH port forwarding** (`ssh -L 8765:127.0.0.1:8765 user@remote-host`) and leave the server bound to localhost. See `visual-companion.md` in the skill directory for the full security note and safer alternatives.
 
+The WebSocket connection (`helper.js`) automatically uses `wss://` when the page is loaded over HTTPS, so the companion works without mixed-content blocks in port-forwarded or secure-tunnel setups.
+
 ## Uninstall
 
 Delete the file (if CaptainCaveman is the only thing in `copilot-instructions.md`), or remove everything between the `<!-- BEGIN CAPTAINCAVEMAN -->` and `<!-- END CAPTAINCAVEMAN -->` markers. Optionally remove the `.github/skills/` tree.
