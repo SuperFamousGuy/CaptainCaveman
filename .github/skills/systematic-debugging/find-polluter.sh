@@ -46,8 +46,9 @@ echo ""
 
 # Use -name (a portable glob match against the file basename) instead of
 # -path (which treats * as not crossing / and doesn't understand `**`).
-TEST_FILES=$(find "$SEARCH_DIR" -type f -name "$NAME_GLOB" | sort)
-TOTAL=$(echo "$TEST_FILES" | grep -c . || echo 0)
+# Use null-delimited output + mapfile to handle filenames with spaces/special chars.
+mapfile -d '' TEST_FILES < <(find "$SEARCH_DIR" -type f -name "$NAME_GLOB" -print0 | sort -z)
+TOTAL=${#TEST_FILES[@]}
 
 if [ "$TOTAL" -eq 0 ]; then
   echo "Error: no files matched $NAME_GLOB under $SEARCH_DIR" >&2
@@ -58,7 +59,7 @@ echo "Found $TOTAL test files"
 echo ""
 
 COUNT=0
-for TEST_FILE in $TEST_FILES; do
+for TEST_FILE in "${TEST_FILES[@]}"; do
   COUNT=$((COUNT + 1))
 
   # Skip if pollution already exists

@@ -134,11 +134,14 @@ Which option?
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 
+# Capture branch name BEFORE switching — $FEATURE_BRANCH is needed for merge and delete.
+FEATURE_BRANCH=$(git branch --show-current)
+
 # Merge first — verify success before removing anything.
 # BASE_BRANCH was resolved in Step 3 above.
 git checkout "$BASE_BRANCH"
 git pull
-git merge "$FEATURE_BRANCH"  # set FEATURE_BRANCH=$(git branch --show-current) before checkout
+git merge "$FEATURE_BRANCH"
 
 # Verify tests on merged result (use the same command detected in Step 1 —
 # e.g. `npm test`, `cargo test`, `pytest`, `go test ./...`, `dotnet test`, etc.)
@@ -150,7 +153,7 @@ git merge "$FEATURE_BRANCH"  # set FEATURE_BRANCH=$(git branch --show-current) b
 Then: Cleanup worktree (Step 6), then delete branch:
 
 ```bash
-git branch -d <feature-branch>
+git branch -d "$FEATURE_BRANCH"
 ```
 
 #### Option 2: Push and Create PR
