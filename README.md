@@ -150,7 +150,7 @@ If your repo already uses different conventions for plan/spec docs, override the
 
 ## Project type detection
 
-`using-git-worktrees` (Step 3 — project setup) and `finishing-a-development-branch` (Step 1 — verify tests) both auto-detect the project type from files in the repo root and run the appropriate install/test command. Supported out of the box:
+`using-git-worktrees` (Step 3 — project setup), `finishing-a-development-branch` (Step 1 — verify tests), and `find-polluter.sh` all auto-detect the project type from files in the repo root and run the appropriate command. Supported out of the box:
 
 | Files present | Setup command | Test command |
 |---|---|---|
@@ -162,8 +162,11 @@ If your repo already uses different conventions for plan/spec docs, override the
 | `Gemfile` | `bundle install` | `bundle exec rspec` |
 | `composer.json` | `composer install` | `vendor/bin/phpunit` |
 | `pom.xml` / `build.gradle*` | `mvn dependency:resolve` / `./gradlew dependencies` | `mvn test` / `./gradlew test` |
+| `Makefile` (with `test` target) | — | `make test` |
 
 Polyglot/monorepo? Each detected ecosystem runs its own setup and tests.
+
+`find-polluter.sh` runner override: set `TEST_RUNNER` env var or pass the command as the 4th argument — e.g. `TEST_RUNNER='yarn test' ./find-polluter.sh ...` or `./find-polluter.sh '.git' src '*.test.ts' 'vitest run'`.
 
 `writing-plans` complements this with **language-agnostic task templates plus worked test-runner examples** for Python/pytest, .NET/xUnit, Node/Vitest, Rust/cargo, and Go — so plan steps land with the right `pytest …` / `dotnet test --filter …` / `npm test …` invocation for your stack instead of a default Python pattern.
 

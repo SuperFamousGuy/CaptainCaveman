@@ -101,10 +101,16 @@ If something appears during tests but you don't know which test:
 Use the bisection script `find-polluter.sh` in this directory:
 
 ```bash
+# Test runner is auto-detected from project files (package.json → npm test,
+# pyproject.toml → pytest, Gemfile → bundle exec rspec, etc.)
 ./find-polluter.sh '.git' src '*.test.ts'
+
+# Override via env var or 4th arg:
+TEST_RUNNER='yarn test' ./find-polluter.sh '.git' src '*.test.ts'
+./find-polluter.sh '.git' src '*.test.ts' 'vitest run'
 ```
 
-Runs tests one-by-one, stops at first polluter. See script for usage.
+Runs tests one-by-one, stops at first polluter. See script header for full usage.
 
 ## Real Example: Empty projectDir
 
