@@ -182,5 +182,3 @@ From debugging session (2025-10-03):
 - Zero conflicts between agent changes
 
 ---
-
-*This skill is ported from [obra/superpowers](https://github.com/obra/superpowers) (MIT-licensed, © 2025 Jesse Vincent). See LICENSE-superpowers at the repo root for the original license text.*

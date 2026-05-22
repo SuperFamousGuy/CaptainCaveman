@@ -103,5 +103,3 @@ You: [Fix progress indicators]
 See template at: requesting-code-review/code-reviewer.md
 
 ---
-
-*This skill is ported from [obra/superpowers](https://github.com/obra/superpowers) (MIT-licensed, © 2025 Jesse Vincent). See LICENSE-superpowers at the repo root for the original license text.*
