@@ -16,6 +16,19 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Minimal JSON string escaping — backslash, double-quote, and common control chars.
+# User-provided args are interpolated into JSON error messages; without escaping a
+# value like foo" --inject would produce invalid JSON.
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"      # \ → \\
+  s="${s//\"/\\\"}"      # " → \"
+  s="${s//$'\n'/\\n}"    # newline → \n
+  s="${s//$'\r'/\\r}"    # CR → \r
+  s="${s//$'\t'/\\t}"    # tab → \t
+  printf '%s' "$s"
+}
+
 # Parse arguments
 PROJECT_DIR=""
 FOREGROUND="false"
@@ -45,7 +58,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     *)
-      echo "{\"error\": \"Unknown argument: $1\"}"
+      echo "{\"error\": \"Unknown argument: $(json_escape "$1")\"}"
       exit 1
       ;;
   esac
@@ -140,7 +153,8 @@ for i in {1..50}; do
       sleep 0.1
     done
     if [[ "$alive" != "true" ]]; then
-      echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
+      RETRY_CMD="$SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground"
+      echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $(json_escape "$RETRY_CMD")\"}"
       exit 1
     fi
     grep "server-started" "$LOG_FILE" | head -1
