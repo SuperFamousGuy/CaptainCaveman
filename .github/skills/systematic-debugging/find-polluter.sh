@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bisection script to find which test creates unwanted files/state.
+# Linear scan to find which test creates unwanted files/state.
 #
 # Usage:
 #   ./find-polluter.sh <pollution_check> <search_dir> [name_glob] [test_runner]
