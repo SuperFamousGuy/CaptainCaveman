@@ -77,8 +77,6 @@ Ported from [obra/superpowers](https://github.com/obra/superpowers). Engineering
 
 > **Not ported from Superpowers:** `subagent-driven-development` relies on Claude Code's `Task` tool throughout and doesn't translate cleanly. Use it with [obra/superpowers](https://github.com/obra/superpowers) directly if you need that workflow.
 
-Skill content preserved verbatim from upstream (MIT, © 2025 Jesse Vincent). See `LICENSE-superpowers` for the original license text.
-
 ## Typical workflow
 
 Just describe what you want — the right format applies automatically:
@@ -182,4 +180,4 @@ Delete the file (if CaptainCaveman is the only thing in `copilot-instructions.md
 ## Credits
 
 - [Caveman](https://github.com/JuliusBrussee/caveman) plugin for Claude Code by [@JuliusBrussee](https://github.com/JuliusBrussee) — source of caveman voice and the caveman/cavecrew task skills.
-- [Superpowers](https://github.com/obra/superpowers) plugin for Claude Code by [@obra](https://github.com/obra) (Jesse Vincent) — source of the 13 engineering-workflow skills. Content preserved verbatim under the upstream MIT license (`LICENSE-superpowers`).
+- [Superpowers](https://github.com/obra/superpowers) plugin for Claude Code by [@obra](https://github.com/obra) (Jesse Vincent) — source of the 13 engineering-workflow skills.

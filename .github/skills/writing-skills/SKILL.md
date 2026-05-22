@@ -639,6 +639,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 How a future agent finds your skill:
 
 1. **Encounters problem** ("tests are flaky")
+2. **Searches skills** (scans descriptions for a match)
 3. **Finds SKILL** (description matches)
 4. **Scans overview** (is this relevant?)
 5. **Reads patterns** (quick reference table)
@@ -657,5 +658,3 @@ Same benefits: Better quality, fewer surprises, bulletproof results.
 If you follow TDD for code, follow it for skills. It's the same discipline applied to documentation.
 
 ---
-
-*This skill is ported from [obra/superpowers](https://github.com/obra/superpowers) (MIT-licensed, © 2025 Jesse Vincent). See LICENSE-superpowers at the repo root for the original license text.*

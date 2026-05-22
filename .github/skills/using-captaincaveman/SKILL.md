@@ -46,5 +46,3 @@ Browse `.github/skills/` for the full list. Each `SKILL.md`'s `description:` fie
 This is the CaptainCaveman equivalent of `using-superpowers` from [obra/superpowers](https://github.com/obra/superpowers). Adapted to reference Copilot's agent-skill plumbing rather than Claude Code's `Skill` tool, but the enforcement philosophy is unchanged.
 
 ---
-
-*This skill is adapted from `using-superpowers` in [obra/superpowers](https://github.com/obra/superpowers) (MIT-licensed, © 2025 Jesse Vincent). See LICENSE-superpowers at the repo root for the original license text.*

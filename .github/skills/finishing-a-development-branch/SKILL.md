@@ -286,5 +286,3 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Run `git worktree prune` after removal
 
 ---
-
-*This skill is ported from [obra/superpowers](https://github.com/obra/superpowers) (MIT-licensed, © 2025 Jesse Vincent). See LICENSE-superpowers at the repo root for the original license text.*
