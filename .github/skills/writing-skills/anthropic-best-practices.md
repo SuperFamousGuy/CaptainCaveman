@@ -1,6 +1,6 @@
 # Anthropic skill-authoring best practices (summary + link)
 
-This file used to be a verbatim copy of Anthropic's "Skill authoring best practices" documentation. The full original copy was removed to avoid redistributing Anthropic-authored content without explicit license clearance.
+This file is a paraphrased summary of Anthropic's "Skill authoring best practices" documentation.
 
 **Canonical source:** [Anthropic docs — Skill authoring best practices](https://docs.anthropic.com/en/docs/agents-and-tools/skills/best-practices)
 *(If the URL has moved, search `docs.anthropic.com` for "skill authoring best practices".)*
@@ -59,4 +59,4 @@ description: Use when <triggering conditions and symptoms>
 
 ---
 
-*This file is a paraphrased summary. The authoritative source is [Anthropic's skill-authoring best practices](https://docs.anthropic.com/en/docs/agents-and-tools/skills/best-practices). The verbatim version that previously lived here was removed to avoid redistributing third-party documentation without explicit license clearance.*
+*This file is a paraphrased summary. For full authoritative guidance see [Anthropic's skill-authoring best practices](https://docs.anthropic.com/en/docs/agents-and-tools/skills/best-practices).*
