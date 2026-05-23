@@ -166,7 +166,7 @@ If your repo already uses different conventions for plan/spec docs, override the
 
 Polyglot/monorepo? Each detected ecosystem runs its own setup and tests.
 
-`find-polluter.sh` runner override: set `TEST_RUNNER` env var or pass the command as the 4th argument — e.g. `TEST_RUNNER='yarn test' ./find-polluter.sh ...` or `./find-polluter.sh '.git' src '*.test.ts' 'vitest run'`.
+`find-polluter.sh` runner notes: Go projects are handled automatically — the script derives the package directory from each test file (`go test ./pkg/foo` rather than passing a file path, which `go test` doesn't accept). For other custom runners, override via `TEST_RUNNER` env var or the 4th argument — e.g. `TEST_RUNNER='yarn test' ./find-polluter.sh ...` or `./find-polluter.sh '.git' src '*.test.ts' 'vitest run'`.
 
 `writing-plans` complements this with **language-agnostic task templates plus worked test-runner examples** for Python/pytest, .NET/xUnit, Node/Vitest, Rust/cargo, and Go — so plan steps land with the right `pytest …` / `dotnet test --filter …` / `npm test …` invocation for your stack instead of a default Python pattern.
 
