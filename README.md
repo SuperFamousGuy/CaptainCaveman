@@ -150,7 +150,7 @@ If your repo already uses different conventions for plan/spec docs, override the
 
 ## Project type detection
 
-`using-git-worktrees` (Step 3 — project setup), `finishing-a-development-branch` (Step 1 — verify tests), and `find-polluter.sh` all auto-detect the project type from files in the repo root and run the appropriate command. Supported out of the box:
+`using-git-worktrees` (Step 2 — project setup), `finishing-a-development-branch` (Step 1 — verify tests), and `find-polluter.sh` all auto-detect the project type from files in the repo root and run the appropriate command. Supported out of the box:
 
 | Files present | Setup command | Test command |
 |---|---|---|
