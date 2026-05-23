@@ -164,7 +164,7 @@ function handleRequest(req, res) {
 
 const clients = new Set();
 
-function handleUpgrade(req, socket) {
+function handleUpgrade(req, socket, head) {
   const key = req.headers['sec-websocket-key'];
   if (!key) { socket.destroy(); return; }
 
@@ -176,7 +176,10 @@ function handleUpgrade(req, socket) {
     'Sec-WebSocket-Accept: ' + accept + '\r\n\r\n'
   );
 
-  let buffer = Buffer.alloc(0);
+  // Seed buffer with any bytes that arrived in the same TCP packet as the
+  // HTTP upgrade request. Dropping `head` causes intermittent decode failures
+  // when the client pipelines its first WebSocket frame with the handshake.
+  let buffer = (head && head.length > 0) ? Buffer.from(head) : Buffer.alloc(0);
   clients.add(socket);
 
   socket.on('data', (chunk) => {
@@ -231,7 +234,7 @@ function handleMessage(text) {
   }
   touchActivity();
   console.log(JSON.stringify({ source: 'user-event', ...event }));
-  if (event.choice) {
+  if (event.type === 'choice') {
     const eventsFile = path.join(STATE_DIR, 'events');
     fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
   }

@@ -52,11 +52,18 @@
       const selected = container ? container.querySelectorAll('.selected') : [];
       if (selected.length === 0) {
         indicator.textContent = 'Click an option above, then return to the terminal';
-      } else if (selected.length === 1) {
-        const label = selected[0].querySelector('h3, .content h3, .card-body h3')?.textContent?.trim() || selected[0].dataset.choice;
-        indicator.innerHTML = '<span class="selected-text">' + label + ' selected</span> — return to terminal to continue';
       } else {
-        indicator.innerHTML = '<span class="selected-text">' + selected.length + ' selected</span> — return to terminal to continue';
+        // Build DOM nodes instead of setting innerHTML — label may come from
+        // dataset.choice which could contain arbitrary text from page content.
+        const labelText = selected.length === 1
+          ? (selected[0].querySelector('h3, .content h3, .card-body h3')?.textContent?.trim() || selected[0].dataset.choice || '') + ' selected'
+          : selected.length + ' selected';
+        const span = document.createElement('span');
+        span.className = 'selected-text';
+        span.textContent = labelText;
+        indicator.textContent = '';
+        indicator.appendChild(span);
+        indicator.appendChild(document.createTextNode(' — return to terminal to continue'));
       }
     }, 0);
   });

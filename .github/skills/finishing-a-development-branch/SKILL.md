@@ -198,13 +198,19 @@ Wait for exact confirmation.
 
 If confirmed:
 ```bash
+# Capture branch name BEFORE switching — needed for the delete step below.
+FEATURE_BRANCH=$(git branch --show-current)
+
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
+
+# Switch to base branch first — git branch -D fails if you're still on the branch.
+git checkout "$BASE_BRANCH"
 ```
 
 Then: Cleanup worktree (Step 6), then force-delete branch:
 ```bash
-git branch -D <feature-branch>
+git branch -D "$FEATURE_BRANCH"
 ```
 
 ### Step 6: Cleanup Workspace
