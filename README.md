@@ -106,6 +106,8 @@ Copilot: [caveman-commit returns a ready-to-paste Conventional Commit]
 curl -fsSL https://raw.githubusercontent.com/SuperFamousGuy/CaptainCaveman/main/install.sh | bash
 ```
 
+In a terminal the installer shows section headers, an animated spinner during network operations, and a live progress bar while downloading skill files. In CI or piped output (`curl … | bash`) all visuals are suppressed and output is plain text. Set `NO_COLOR=1` to force plain-text mode in any context.
+
 The installer does two things:
 
 ### Step 0 — Legacy cleanup
