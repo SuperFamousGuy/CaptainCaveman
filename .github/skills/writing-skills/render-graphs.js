@@ -137,6 +137,19 @@ function main() {
     fs.mkdirSync(outputDir);
   }
 
+  // Keep generated output out of git. Create/update .gitignore in the skill
+  // directory so `diagrams/` is never accidentally committed.
+  const gitignorePath = path.join(skillDir, '.gitignore');
+  const gitignoreEntry = 'diagrams/\n';
+  if (!fs.existsSync(gitignorePath)) {
+    fs.writeFileSync(gitignorePath, gitignoreEntry);
+  } else {
+    const existing = fs.readFileSync(gitignorePath, 'utf8');
+    if (!existing.includes('diagrams/')) {
+      fs.appendFileSync(gitignorePath, (existing.endsWith('\n') ? '' : '\n') + gitignoreEntry);
+    }
+  }
+
   if (combine) {
     // Combine all graphs into one
     const combined = combineGraphs(blocks, skillName);
