@@ -47,23 +47,36 @@ else
   TEST_RUNNER="${TEST_RUNNER:-}"
 fi
 
-# Detect test runner from project files if not already set via arg or env var.
-# Each runner must accept a single test-file path as its last argument.
-if [ -z "$TEST_RUNNER" ]; then
-  if [ -f package.json ];                                     then TEST_RUNNER="npm test"
+# Runner is stored as a Bash array for safe invocation (handles multi-word commands
+# without brittle unquoted string splitting). GO_MODE triggers package-path derivation
+# instead of direct file-path passing — `go test` does not accept a file argument.
+RUNNER_ARR=()
+GO_MODE=false
+
+if [ -n "$TEST_RUNNER" ]; then
+  # User-provided string (env var or 4th arg): split on spaces into array.
+  # Runner paths with embedded spaces are not supported in this form.
+  IFS=' ' read -ra RUNNER_ARR <<< "$TEST_RUNNER"
+else
+  # Auto-detect from project files.
+  if [ -f package.json ];                                     then RUNNER_ARR=("npm" "test")
   elif [ -f pyproject.toml ] || [ -f requirements.txt ] \
-       || [ -f setup.py ];                                    then TEST_RUNNER="pytest"
-  elif [ -f Gemfile ];                                        then TEST_RUNNER="bundle exec rspec"
-  elif [ -f composer.json ];                                  then TEST_RUNNER="vendor/bin/phpunit"
-  elif [ -f pom.xml ];                                        then TEST_RUNNER="mvn test"
-  elif ls build.gradle* >/dev/null 2>&1;                      then TEST_RUNNER="./gradlew test"
-  elif [ -f Cargo.toml ];                                     then TEST_RUNNER="cargo test"
-  elif [ -f go.mod ];                                         then TEST_RUNNER="go test ./..."
+       || [ -f setup.py ];                                    then RUNNER_ARR=("pytest")
+  elif [ -f Gemfile ];                                        then RUNNER_ARR=("bundle" "exec" "rspec")
+  elif [ -f composer.json ];                                  then RUNNER_ARR=("vendor/bin/phpunit")
+  elif [ -f pom.xml ];                                        then RUNNER_ARR=("mvn" "test")
+  elif ls build.gradle* >/dev/null 2>&1;                      then RUNNER_ARR=("./gradlew" "test")
+  elif [ -f Cargo.toml ];                                     then RUNNER_ARR=("cargo" "test")
+  elif [ -f go.mod ]; then
+    # `go test` takes a package path (directory), not a file path — handled at
+    # invocation time via GO_MODE.
+    RUNNER_ARR=("go" "test")
+    GO_MODE=true
   else
     echo "Warning: could not detect test runner. Set TEST_RUNNER env var or pass as 4th arg." >&2
-    TEST_RUNNER="npm test"
+    RUNNER_ARR=("npm" "test")
   fi
-  echo "Detected test runner: $TEST_RUNNER"
+  echo "Detected test runner: ${RUNNER_ARR[*]}"
 fi
 
 if [ ! -d "$SEARCH_DIR" ]; then
@@ -110,7 +123,13 @@ for TEST_FILE in "${TEST_FILES_ARR[@]}"; do
   echo "[$COUNT/$TOTAL] Testing: $TEST_FILE"
 
   # Run the test using the detected/configured runner.
-  $TEST_RUNNER "$TEST_FILE" > /dev/null 2>&1 || true
+  if [ "$GO_MODE" = true ]; then
+    # go test takes a package path, not a file path — derive the directory.
+    PKG_DIR="./$(dirname "$TEST_FILE")"
+    "${RUNNER_ARR[@]}" "$PKG_DIR" > /dev/null 2>&1 || true
+  else
+    "${RUNNER_ARR[@]}" "$TEST_FILE" > /dev/null 2>&1 || true
+  fi
 
   # Check if pollution appeared
   if [ -e "$POLLUTION_CHECK" ]; then
@@ -123,7 +142,11 @@ for TEST_FILE in "${TEST_FILES_ARR[@]}"; do
     ls -la "$POLLUTION_CHECK"
     echo ""
     echo "To investigate:"
-    echo "  $TEST_RUNNER $TEST_FILE    # Run just this test"
+    if [ "$GO_MODE" = true ]; then
+      echo "  ${RUNNER_ARR[*]} ./$(dirname "$TEST_FILE")    # Run just this package"
+    else
+      echo "  ${RUNNER_ARR[*]} $TEST_FILE    # Run just this test"
+    fi
     echo "  cat $TEST_FILE             # Review test code"
     exit 1
   fi
