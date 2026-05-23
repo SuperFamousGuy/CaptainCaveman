@@ -10,10 +10,100 @@ SKILLS_PREFIX=".github/skills/"
 BEGIN_MARKER="<!-- BEGIN CAPTAINCAVEMAN -->"
 END_MARKER="<!-- END CAPTAINCAVEMAN -->"
 
-# All `.prompt.md` files the very first (PR #2) installer dropped under
-# `.github/prompts/`. Later iterations replaced this with copilot-instructions.md
-# + .github/skills/, but old files linger on workspaces that installed during
-# that brief window.
+# ── Visual helpers ─────────────────────────────────────────────────────────
+# Colour and spinners activate only when stdout is a real terminal and
+# NO_COLOR is unset. Everything degrades to plain text in CI / piped output.
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  BOLD='\033[1m'  DIM='\033[2m'     RESET='\033[0m'
+  GREEN='\033[32m' YELLOW='\033[33m' RED='\033[31m'
+  CYAN='\033[36m'  BLUE='\033[34m'
+  INTERACTIVE=true
+else
+  BOLD='' DIM='' RESET='' GREEN='' YELLOW='' RED='' CYAN='' BLUE=''
+  INTERACTIVE=false
+fi
+
+CHK="${GREEN}✓${RESET}"
+WRN="${YELLOW}⚠${RESET}"
+BAD="${RED}✗${RESET}"
+
+section() { printf "\n${BOLD}${BLUE}▸ %s${RESET}\n" "$1"; }
+ok()      { printf "  ${CHK} %s\n" "$1"; }
+skip()    { printf "  ${DIM}─ %s${RESET}\n" "$1"; }
+warn_msg(){ printf "  ${WRN} %s\n" "$1" >&2; }
+die()     { printf "\n  ${BAD} %s\n\n" "$1" >&2; exit 1; }
+
+# ── Spinner ────────────────────────────────────────────────────────────────
+SPIN_PID=''
+_FRAMES='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+
+_spin_loop() {
+  local label="$1" i=0
+  while true; do
+    printf "\r  ${CYAN}%s${RESET} %s   " "${_FRAMES:$(( i % 10 )):1}" "$label"
+    sleep 0.1
+    i=$(( i + 1 ))
+  done
+}
+
+spin_start() {
+  if [ "$INTERACTIVE" = true ]; then
+    _spin_loop "$1" &
+    SPIN_PID=$!
+  else
+    printf "  %s..." "$1"
+  fi
+}
+
+spin_stop() {
+  if [ -n "$SPIN_PID" ]; then
+    kill "$SPIN_PID" 2>/dev/null || true
+    wait "$SPIN_PID" 2>/dev/null || true
+    SPIN_PID=''
+    [ "$INTERACTIVE" = true ] && printf "\r\033[K"
+  fi
+}
+
+# ── Progress bar ───────────────────────────────────────────────────────────
+# Usage: progress CURRENT TOTAL LABEL
+progress() {
+  [ "$INTERACTIVE" != true ] && return
+  local cur=$1 tot=$2 label="${3:-}" w=32 filled bar='' i=0
+  filled=$(( cur * w / tot ))
+  while [ $i -lt $filled ]; do bar="${bar}█"; i=$(( i + 1 )); done
+  while [ $i -lt $w ];      do bar="${bar}░"; i=$(( i + 1 )); done
+  printf "\r  ${DIM}[${RESET}${GREEN}%s${RESET}${DIM}]${RESET}  %s/%s  %s" \
+         "$bar" "$cur" "$tot" "$label"
+}
+
+# ── Banners ────────────────────────────────────────────────────────────────
+print_header() {
+  printf "\n"
+  printf "${BOLD}  ┌─────────────────────────────────┐${RESET}\n"
+  printf "${BOLD}  │    CaptainCaveman  Installer    │${RESET}\n"
+  printf "${BOLD}  └─────────────────────────────────┘${RESET}\n"
+}
+
+print_footer() {
+  printf "\n"
+  printf "${BOLD}${GREEN}  ┌────────────────────────────────────────────┐${RESET}\n"
+  printf "${BOLD}${GREEN}  │  ✓  Caveman active. Superpowers loaded.   │${RESET}\n"
+  printf "${BOLD}${GREEN}  │     Open Copilot Chat to begin.           │${RESET}\n"
+  printf "${BOLD}${GREEN}  └────────────────────────────────────────────┘${RESET}\n"
+  printf "\n"
+}
+
+# ── Startup ────────────────────────────────────────────────────────────────
+print_header
+mkdir -p "$(dirname "$TARGET")"
+
+TMP=$(mktemp)
+trap 'spin_stop; rm -f "$TMP" "$TARGET.new" 2>/dev/null || true' EXIT INT TERM
+
+# ── Step 0: Clean up legacy CaptainCaveman artifacts ──────────────────────
+# Removes `.github/prompts/*.prompt.md` files from the original (PR #2) install,
+# and (later) rewrites any pre-marker monolithic copilot-instructions.md as part
+# of Part 1.
 LEGACY_PROMPT_FILES=(
   ".github/prompts/caveman.prompt.md"
   ".github/prompts/caveman-commit.prompt.md"
@@ -26,39 +116,31 @@ LEGACY_PROMPT_FILES=(
   ".github/prompts/cavecrew-reviewer.prompt.md"
 )
 
-mkdir -p "$(dirname "$TARGET")"
-
-TMP=$(mktemp)
-trap 'rm -f "$TMP" "$TARGET.new" 2>/dev/null || true' EXIT
-
-# --- Step 0: Clean up legacy CaptainCaveman artifacts ---
-# Removes `.github/prompts/*.prompt.md` files from the original (PR #2) install,
-# and (later) rewrites any pre-marker monolithic copilot-instructions.md as part
-# of Part 1.
+section "Cleanup"
 REMOVED_LEGACY=0
 for f in "${LEGACY_PROMPT_FILES[@]}"; do
   if [ -f "$f" ]; then
     rm -f "$f"
-    echo "Removed legacy file: $f"
-    REMOVED_LEGACY=$((REMOVED_LEGACY + 1))
+    ok "Removed legacy file: $f"
+    REMOVED_LEGACY=$(( REMOVED_LEGACY + 1 ))
   fi
 done
-if [ "$REMOVED_LEGACY" -gt 0 ] && [ -d .github/prompts ] && [ -z "$(ls -A .github/prompts 2>/dev/null)" ]; then
+if [ "$REMOVED_LEGACY" -gt 0 ] && [ -d .github/prompts ] \
+   && [ -z "$(ls -A .github/prompts 2>/dev/null)" ]; then
   rmdir .github/prompts
-  echo "Removed now-empty .github/prompts/ directory"
+  ok "Removed now-empty .github/prompts/"
 fi
-if [ "$REMOVED_LEGACY" -gt 0 ]; then
-  echo "Cleaned up $REMOVED_LEGACY legacy file(s) from an earlier CaptainCaveman install."
-  echo
+if [ "$REMOVED_LEGACY" -eq 0 ]; then
+  skip "No legacy files found"
 fi
 
+# ── Part 1: Install/update copilot-instructions.md ────────────────────────
 # Detect a pre-marker monolithic CaptainCaveman install (file exists, no
 # markers, but H1 is CaptainCaveman). Earlier installer versions used a plain
 # `curl -o` and didn't add markers — re-running today would append a duplicate
 # block. Treat these as fully-managed legacy files and wipe-and-replace.
 is_legacy_monolithic_install() {
   [ -f "$TARGET" ] || return 1
-  # First non-blank line must be the CaptainCaveman H1
   local first_line
   first_line=$(awk 'NF{print; exit}' "$TARGET")
   case "$first_line" in
@@ -67,9 +149,10 @@ is_legacy_monolithic_install() {
   esac
 }
 
-# --- Part 1: Install/update copilot-instructions.md ---
-echo "Fetching CaptainCaveman instructions..."
+section "Instructions"
+spin_start "Fetching copilot-instructions.md"
 curl -fsSL "${BASE_URL}/.github/copilot-instructions.md" -o "$TMP"
+spin_stop
 
 write_fresh_block() {
   {
@@ -80,41 +163,25 @@ write_fresh_block() {
 }
 
 if [ ! -f "$TARGET" ]; then
-  # Fresh install
   write_fresh_block
-  echo "Installed instructions to $TARGET"
+  ok "Installed → $TARGET"
 else
   HAS_BEGIN=$(grep -cF "$BEGIN_MARKER" "$TARGET" || true)
-  HAS_END=$(grep -cF "$END_MARKER" "$TARGET" || true)
+  HAS_END=$(grep -cF   "$END_MARKER"   "$TARGET" || true)
 
   if [ "$HAS_BEGIN" -eq 1 ] && [ "$HAS_END" -eq 1 ]; then
-    # Standard managed-block update
-    awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" -v content_file="$TMP" '
-      $0 == begin {
-        print
-        while ((getline line < content_file) > 0) print line
-        in_block = 1
-        next
-      }
-      $0 == end {
-        in_block = 0
-        print
-        next
-      }
-      !in_block { print }
+    awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" -v cf="$TMP" '
+      $0 == begin { print; while ((getline l < cf) > 0) print l; in_b=1; next }
+      $0 == end   { in_b=0; print; next }
+      !in_b       { print }
     ' "$TARGET" > "$TARGET.new"
     mv "$TARGET.new" "$TARGET"
-    echo "Updated CaptainCaveman block in $TARGET (other content preserved)."
+    ok "Updated block in $TARGET  ${DIM}(other content preserved)${RESET}"
   elif [ "$HAS_BEGIN" -eq 0 ] && [ "$HAS_END" -eq 0 ]; then
     if is_legacy_monolithic_install; then
-      # Pre-marker (PR #3 / PR #5 era) CaptainCaveman install — fully-managed
-      # file with no markers. Wipe and replace with the current marker-wrapped
-      # block so users get the dispatcher + skill references.
       write_fresh_block
-      echo "Detected legacy pre-marker CaptainCaveman install in $TARGET — replaced with the current Superpowered version."
+      ok "Replaced legacy pre-marker install in $TARGET"
     else
-      # Genuine user-authored file with no CaptainCaveman content yet. Append
-      # the block after preserving everything that's already there.
       {
         cat "$TARGET"
         tail -c1 "$TARGET" | od -An -c | grep -q '\\n' || printf '\n'
@@ -123,34 +190,33 @@ else
         printf '%s\n' "$END_MARKER"
       } > "$TARGET.new"
       mv "$TARGET.new" "$TARGET"
-      echo "Appended CaptainCaveman block to existing $TARGET (existing content preserved)."
+      ok "Appended block to $TARGET  ${DIM}(existing content preserved)${RESET}"
     fi
   else
-    echo "Error: $TARGET has an unbalanced CaptainCaveman marker pair." >&2
-    echo "  BEGIN markers: $HAS_BEGIN, END markers: $HAS_END" >&2
-    echo "Fix the file manually and re-run." >&2
-    exit 1
+    die "$TARGET has unbalanced markers (BEGIN=$HAS_BEGIN END=$HAS_END). Fix manually and re-run."
   fi
 fi
 
-# --- Part 2: Install agent skills under .github/skills/ (best-effort) ---
-# Part 2 must never break Part 1. If anything goes wrong (no python3, API
-# rate-limit, network blip, partial download), warn and exit 0 — the
-# instructions file is already in place.
-echo
-echo "Fetching skill list..."
+# ── Part 2: Install agent skills under .github/skills/ ────────────────────
+# Best-effort: never abort Part 1's work. Warn and exit 0 on any failure.
+section "Skills"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "Note: python3 not found. Skipping agent-skill install (instructions file already in place)." >&2
+  warn_msg "python3 not found — skipping skill install (instructions file already in place)"
+  print_footer
   exit 0
 fi
 
+spin_start "Resolving file list"
 set +e
 TREE_JSON=$(curl -fsSL "${API_URL}/git/trees/${BRANCH}?recursive=1")
 TREE_RC=$?
 set -e
+spin_stop
+
 if [ "$TREE_RC" -ne 0 ] || [ -z "$TREE_JSON" ]; then
-  echo "Warning: failed to list repo tree via GitHub API (rate-limit or network). Skipping agent-skill install." >&2
+  warn_msg "GitHub API unreachable — skipping skill install (instructions file already in place)"
+  print_footer
   exit 0
 fi
 
@@ -164,50 +230,56 @@ for item in tree.get('tree', []):
     if item.get('type') == 'blob' and item.get('path', '').startswith('$SKILLS_PREFIX'):
         print(item['path'])
 " 2>/dev/null) || {
-  echo "Warning: could not parse the GitHub API tree response. Skipping agent-skill install." >&2
+  warn_msg "Could not parse GitHub API response — skipping skill install"
+  print_footer
   exit 0
 }
 
 if [ -z "$PATHS" ]; then
-  echo "No agent skills found in the repo. Done."
+  warn_msg "No skill files found in repo"
+  print_footer
   exit 0
 fi
 
 SKILL_COUNT=$(printf '%s\n' "$PATHS" | awk -F/ 'NF>=3{print $3}' | sort -u | wc -l | tr -d ' ')
-FILE_COUNT=$(printf '%s\n' "$PATHS" | wc -l | tr -d ' ')
-echo "Installing $SKILL_COUNT agent skills ($FILE_COUNT files)..."
+FILE_COUNT=$(printf '%s\n'  "$PATHS" | wc -l | tr -d ' ')
+ok "$SKILL_COUNT skills  ·  $FILE_COUNT files"
+printf "\n"
 
+DONE=0
 FAILED=0
-while IFS= read -r path; do
-  [ -z "$path" ] && continue
-  mkdir -p "$(dirname "$path")"
-  if ! curl -fsSL "${BASE_URL}/${path}" -o "$path"; then
-    echo "  Warning: failed to download $path" >&2
-    FAILED=$((FAILED + 1))
+FAIL_LIST=""
+while IFS= read -r fpath; do
+  [ -z "$fpath" ] && continue
+  mkdir -p "$(dirname "$fpath")"
+  DONE=$(( DONE + 1 ))
+  progress "$DONE" "$FILE_COUNT" "downloading"
+  if ! curl -fsSL "${BASE_URL}/${fpath}" -o "$fpath" 2>/dev/null; then
+    FAILED=$(( FAILED + 1 ))
+    FAIL_LIST="${FAIL_LIST}      • ${fpath}\n"
   fi
 done <<EOF
 $PATHS
 EOF
 
-# `curl -o` doesn't preserve the executable bit. Restore it for the shell
-# scripts shipped with the skills (find-polluter.sh, visual-companion
-# start/stop scripts) so they're runnable as documented in their SKILL.md.
+[ "$INTERACTIVE" = true ] && printf "\n"
+
+# Restore executable bit on shell scripts (curl -o strips it).
 CHMOD_COUNT=0
 while IFS= read -r sh_path; do
   [ -z "$sh_path" ] && continue
   if [ -f "$sh_path" ]; then
     chmod +x "$sh_path"
-    CHMOD_COUNT=$((CHMOD_COUNT + 1))
+    CHMOD_COUNT=$(( CHMOD_COUNT + 1 ))
   fi
 done < <(printf '%s\n' "$PATHS" | grep -E '\.sh$' || true)
-if [ "$CHMOD_COUNT" -gt 0 ]; then
-  echo "Set executable bit on $CHMOD_COUNT shell script(s)."
-fi
+[ "$CHMOD_COUNT" -gt 0 ] && ok "Set +x on $CHMOD_COUNT shell script(s)"
 
 if [ "$FAILED" -gt 0 ]; then
-  echo "Skill install completed with $FAILED file(s) failed. Re-run the installer to retry." >&2
+  warn_msg "$FAILED file(s) failed to download — re-run to retry:"
+  printf "%b" "$FAIL_LIST" >&2
 else
-  echo "Skill install complete."
+  ok "All $FILE_COUNT files installed"
 fi
 
-echo "Open Copilot Chat in this workspace — Caveman is now active and agent skills are available."
+print_footer
