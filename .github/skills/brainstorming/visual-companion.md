@@ -49,6 +49,13 @@ Save `screen_dir` and `state_dir` from the response. Tell user to open the URL.
 
 **Launching the server by platform:**
 
+> **Shell requirement (Windows users):** `start-server.sh` and `stop-server.sh` are POSIX shell scripts that assume `/tmp`, `nohup`, and standard Unix utilities. They will not run in `cmd.exe` or PowerShell. On Windows, run them from one of:
+> - **WSL** (Windows Subsystem for Linux) — recommended; full Linux compatibility
+> - **Git Bash** (ships with Git for Windows) — works; the script auto-detects via `MSYSTEM`/`OSTYPE` and switches to foreground mode
+> - **Cygwin / MSYS2** — should work, untested
+>
+> Native PowerShell / `cmd.exe` is not supported. There is no `.ps1` equivalent shipped today. If you need pure-Windows support, run the Node server directly: `node scripts/server.cjs` with `BRAINSTORM_DIR`, `BRAINSTORM_HOST`, `BRAINSTORM_URL_HOST`, and `BRAINSTORM_OWNER_PID` env vars set (see `start-server.sh` for the expected values).
+
 **Claude Code (macOS / Linux):**
 ```bash
 # Default mode works — the script backgrounds the server itself
