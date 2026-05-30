@@ -132,10 +132,11 @@ Never overwrites your *user-authored* instructions. Manages a marker-delimited C
 
 Enumerates skill files via the GitHub git-trees API and downloads each one, including supporting files like `brainstorming/scripts/*` (visual-companion server + helpers), `systematic-debugging/find-polluter.sh`, and the worked examples under `writing-skills/examples/`. Requires `python3` for JSON parsing.
 
+- **Existing skill files are preserved.** If a file already exists under `.github/skills/`, the installer leaves it alone — only missing files are downloaded. This means re-running the installer (or running it in a repo with customized skills) won't produce a destructive diff. Set `UPGRADE=1` to opt into overwriting existing files with the upstream versions: `UPGRADE=1 curl -fsSL …/install.sh | bash`. The summary line tells you what happened — `Installed N new · kept M existing` or `Upgraded N file(s)`.
 - If `python3` is missing, Part 2 is skipped with a warning. Part 1 still completes — you get the always-on voice and the dispatcher; agent-skill auto-load in agent contexts won't have local files to read, but the dispatcher still works.
 - If the GitHub API is rate-limited or unreachable, Part 2 warns and skips. Part 1 still completes.
 - Per-file download failures are reported but don't abort the install — re-run to retry.
-- After download, the installer restores the executable bit on every `.sh` file under `.github/skills/` (`curl -o` doesn't preserve it). The visual-companion `start-server.sh` / `stop-server.sh` and `find-polluter.sh` are runnable as documented in their SKILL.md.
+- After download, the installer restores the executable bit on the `.sh` files it just wrote (`curl -o` doesn't preserve it). Preserved files are not touched — their permissions stay as the user left them.
 
 ### Manual install
 

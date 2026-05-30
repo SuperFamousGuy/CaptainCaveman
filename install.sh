@@ -10,6 +10,17 @@ SKILLS_PREFIX=".github/skills/"
 BEGIN_MARKER="<!-- BEGIN CAPTAINCAVEMAN -->"
 END_MARKER="<!-- END CAPTAINCAVEMAN -->"
 
+# Install mode for skill files under .github/skills/:
+#   preserve (default) — never overwrite an existing file; new files install normally.
+#   upgrade  (UPGRADE=1) — overwrite every file with the upstream version.
+# copilot-instructions.md uses marker-delimited block management (Part 1) and is
+# always non-destructive to user content outside the markers, so this flag does
+# not affect it.
+case "${UPGRADE:-}" in
+  1|true|TRUE|yes) INSTALL_MODE="upgrade" ;;
+  *)               INSTALL_MODE="preserve" ;;
+esac
+
 # ── Visual helpers ─────────────────────────────────────────────────────────
 # Colour and spinners activate only when stdout is a real terminal and
 # NO_COLOR is unset. Everything degrades to plain text in CI / piped output.
@@ -243,20 +254,41 @@ fi
 
 SKILL_COUNT=$(printf '%s\n' "$PATHS" | awk -F/ 'NF>=3{print $3}' | sort -u | wc -l | tr -d ' ')
 FILE_COUNT=$(printf '%s\n'  "$PATHS" | wc -l | tr -d ' ')
-ok "$SKILL_COUNT skills  ·  $FILE_COUNT files"
+if [ "$INSTALL_MODE" = "upgrade" ]; then
+  ok "$SKILL_COUNT skills  ·  $FILE_COUNT files  ${DIM}(upgrade mode — overwriting)${RESET}"
+else
+  ok "$SKILL_COUNT skills  ·  $FILE_COUNT files  ${DIM}(preserve mode — UPGRADE=1 to overwrite)${RESET}"
+fi
 printf "\n"
 
 DONE=0
+INSTALLED=0
+KEPT=0
 FAILED=0
 FAIL_LIST=""
+DOWNLOADED_PATHS=""
 while IFS= read -r fpath; do
   [ -z "$fpath" ] && continue
   mkdir -p "$(dirname "$fpath")"
   DONE=$(( DONE + 1 ))
+
+  # Preserve mode: keep any file that already exists. The user may have
+  # customised the skill — overwriting silently would produce a destructive
+  # diff in their next install PR. Use UPGRADE=1 to opt into overwriting.
+  if [ -f "$fpath" ] && [ "$INSTALL_MODE" = "preserve" ]; then
+    KEPT=$(( KEPT + 1 ))
+    progress "$DONE" "$FILE_COUNT" "kept existing"
+    continue
+  fi
+
   progress "$DONE" "$FILE_COUNT" "downloading"
   if ! curl -fsSL "${BASE_URL}/${fpath}" -o "$fpath" 2>/dev/null; then
     FAILED=$(( FAILED + 1 ))
     FAIL_LIST="${FAIL_LIST}      • ${fpath}\n"
+  else
+    INSTALLED=$(( INSTALLED + 1 ))
+    DOWNLOADED_PATHS="${DOWNLOADED_PATHS}${fpath}
+"
   fi
 done <<EOF
 $PATHS
@@ -264,7 +296,8 @@ EOF
 
 [ "$INTERACTIVE" = true ] && printf "\n"
 
-# Restore executable bit on shell scripts (curl -o strips it).
+# Restore executable bit on shell scripts we actually wrote (curl -o strips
+# it). Skip files we preserved — those are the user's version, leave alone.
 CHMOD_COUNT=0
 while IFS= read -r sh_path; do
   [ -z "$sh_path" ] && continue
@@ -272,14 +305,23 @@ while IFS= read -r sh_path; do
     chmod +x "$sh_path"
     CHMOD_COUNT=$(( CHMOD_COUNT + 1 ))
   fi
-done < <(printf '%s\n' "$PATHS" | grep -E '\.sh$' || true)
+done < <(printf '%s\n' "$DOWNLOADED_PATHS" | grep -E '\.sh$' || true)
 [ "$CHMOD_COUNT" -gt 0 ] && ok "Set +x on $CHMOD_COUNT shell script(s)"
 
+# Summary
 if [ "$FAILED" -gt 0 ]; then
   warn_msg "$FAILED file(s) failed to download — re-run to retry:"
   printf "%b" "$FAIL_LIST" >&2
-else
-  ok "All $FILE_COUNT files installed"
+fi
+
+if [ "$INSTALL_MODE" = "upgrade" ]; then
+  [ "$INSTALLED" -gt 0 ] && ok "Upgraded $INSTALLED file(s)"
+elif [ "$INSTALLED" -gt 0 ] && [ "$KEPT" -gt 0 ]; then
+  ok "Installed $INSTALLED new  ${DIM}·  kept $KEPT existing (UPGRADE=1 to overwrite)${RESET}"
+elif [ "$INSTALLED" -gt 0 ]; then
+  ok "Installed $INSTALLED file(s)"
+elif [ "$KEPT" -gt 0 ]; then
+  ok "All $KEPT file(s) already present  ${DIM}(UPGRADE=1 to overwrite)${RESET}"
 fi
 
 print_footer
